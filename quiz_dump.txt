@@ -1,0 +1,283 @@
+Q1 - Português
+Enunciado: **Texto base — Questões 01 a 04**
+*"A administraçã...
+Resp Correta: C - O desafio da administração é equilibrar a agilidade processual com a segurança jurídica, por meio da gestão orientada a resultados.
+
+Q2 - Português
+Enunciado: **Texto base — Questões 01 a 04**
+*"A administraçã...
+Resp Correta: C - Incessante.
+
+Q3 - Português
+Enunciado: **Texto base — Questões 01 a 04**
+*"A administraçã...
+Resp Correta: B - Ações do Estado.
+
+Q4 - Português
+Enunciado: **Texto base — Questões 01 a 04**
+*"A administraçã...
+Resp Correta: D - Oposição.
+
+Q5 - Português
+Enunciado: Assinale a alternativa em que a palavra está grafa...
+Resp Correta: D - voo
+
+Q6 - Português
+Enunciado: Assinale a alternativa em que o acento indicador d...
+Resp Correta: A - O funcionário foi à referida reunião.
+
+Q7 - Português
+Enunciado: Assinale a opção em que a concordância verbal está...
+Resp Correta: A - Haviam muitos candidatos na sala de espera.
+
+Q8 - Português
+Enunciado: Em qual alternativa a regência verbal está de acor...
+Resp Correta: D - O diretor assistiu ao servidor durante a reunião.
+
+Q9 - Português
+Enunciado: *"O Ministério da Fazenda divulgou o edital do con...
+Resp Correta: B - O edital do concurso foi divulgado pelo Ministério da Fazenda.
+
+Q10 - Português
+Enunciado: Em *"O candidato que estuda com disciplina tem mai...
+Resp Correta: D - Candidato.
+
+Q11 - Português
+Enunciado: Em *"Os servidores discutiram a proposta durante h...
+Resp Correta: A - Verbo transitivo direto.
+
+Q12 - Português
+Enunciado: *"O relatório foi revisado **minuciosamente** pelo...
+Resp Correta: C - Adjunto adverbial de modo.
+
+Q13 - Português
+Enunciado: Aponte a alternativa em que a oração destacada exp...
+Resp Correta: A - O servidor trabalhou para que o projeto fosse concluído.
+
+Q14 - Português
+Enunciado: Assinale a alternativa em que o termo entre parênt...
+Resp Correta: B - *"O ponto de equilíbrio, ainda que movediço, reside na gestão orientada por resultados."* (Antítese)
+
+Q15 - Português
+Enunciado: De acordo com o Manual de Redação da Presidência d...
+Resp Correta: C - Memorando
+
+Q16 - Português
+Enunciado: A característica da redação oficial que preza pela...
+Resp Correta: B - Concisão.
+
+Q17 - Português
+Enunciado: Assinale a alternativa em que a palavra está **cor...
+Resp Correta: D - órfão
+
+Q18 - Português
+Enunciado: Em *"A candidata estava a uma hora do local da pro...
+Resp Correta: A - Artigo, preposição, preposição.
+
+Q19 - Português
+Enunciado: Assinale a alternativa que apresenta um exemplo de...
+Resp Correta: C - O servidor chegou cansado.
+
+Q20 - Português
+Enunciado: Em *"A administração é a arte de realizar com efic...
+Resp Correta: B - É de ligação e liga o sujeito a uma característica.
+
+Q21 - Matemática e Raciocínio Lógico
+Enunciado: Em um concurso, a razão entre candidatos inscritos...
+Resp Correta: C - 500.000
+
+Q22 - Matemática e Raciocínio Lógico
+Enunciado: Um servidor recebeu um aumento de 12% sobre seu sa...
+Resp Correta: C - R$ 3.000,00
+
+Q23 - Matemática e Raciocínio Lógico
+Enunciado: A negação da proposição **"Todo servidor público é...
+Resp Correta: B - Existe servidor público que não é honesto.
+
+Q24 - Matemática e Raciocínio Lógico
+Enunciado: Considerando as proposições simples p: *O servidor...
+Resp Correta: A - p → q
+
+Q25 - Matemática e Raciocínio Lógico
+Enunciado: Em uma planilha do Excel, um funcionário deseja ca...
+Resp Correta: B - =MÉDIA(A1:A5)
+
+Q26 - Matemática e Raciocínio Lógico
+Enunciado: Se João é mais alto que Pedro, e Pedro é mais alto...
+Resp Correta: C - João é mais alto que Maria.
+
+Q27 - Matemática e Raciocínio Lógico
+Enunciado: Um capital de R$ 1.000,00 foi aplicado a juros sim...
+Resp Correta: A - R$ 1.300,00
+
+Q28 - Matemática e Raciocínio Lógico
+Enunciado: Em uma progressão aritmética, o primeiro termo é 5...
+Resp Correta: C - 3
+
+Q29 - Matemática e Raciocínio Lógico
+Enunciado: Uma pesquisa mostrou que 60% dos servidores são a ...
+Resp Correta: C - 200
+
+Q30 - Matemática e Raciocínio Lógico
+Enunciado: Dado o conjunto {10, 12, 12, 14, 16, 20}, a **medi...
+Resp Correta: B - 13
+
+Q31 - Informática
+Enunciado: Qual componente de hardware é responsável pelo arm...
+Resp Correta: D - HD (Disco Rígido) ou SSD
+
+Q32 - Informática
+Enunciado: O recurso do Word que permite enviar uma mesma cor...
+Resp Correta: C - Mala direta.
+
+Q33 - Informática
+Enunciado: Qual das alternativas representa um endereço de e-...
+Resp Correta: A - usuario@servidor.com.br
+
+Q34 - Informática
+Enunciado: O protocolo que garante a segurança da transmissão...
+Resp Correta: C - SSL/TLS
+
+Q35 - Informática
+Enunciado: No Windows, qual o atalho de teclado para **"desfa...
+Resp Correta: D - Ctrl + Z
+
+Q36 - Informática
+Enunciado: Qual das opções é um exemplo de software de **nave...
+Resp Correta: B - Mozilla Firefox
+
+Q37 - Informática
+Enunciado: A extensão de arquivo **.pdf** é comumente associa...
+Resp Correta: B - Adobe Acrobat
+
+Q38 - Informática
+Enunciado: O ato de criar uma cópia de segurança dos dados pa...
+Resp Correta: C - Backup
+
+Q39 - Informática
+Enunciado: No Microsoft Excel, qual a função utilizada para c...
+Resp Correta: D - =CONT.SE()
+
+Q40 - Informática
+Enunciado: Um **"cavalo de Troia" (Trojan)** é um tipo de:...
+Resp Correta: C - Programa malicioso que se apresenta como legítimo, mas executa ações danosas.
+
+Q41 - Atualidades
+Enunciado: O BRICS tem como principal característica:...
+Resp Correta: C - Reunir países com economias em desenvolvimento de grande relevância no cenário global.
+
+Q42 - Atualidades
+Enunciado: A Política Nacional de Resíduos Sólidos (Lei nº 12...
+Resp Correta: B - Redução, reutilização, reciclagem, tratamento e disposição final.
+
+Q43 - Atualidades
+Enunciado: A LGPD (Lei nº 13.709/2018) visa a:...
+Resp Correta: B - Proteger os direitos fundamentais de liberdade e privacidade no tratamento de dados pessoais.
+
+Q44 - Atualidades
+Enunciado: O conceito de **ESG** (Environmental, Social, and ...
+Resp Correta: B - Um conjunto de práticas de sustentabilidade e governança que guiam as decisões de investimento.
+
+Q45 - Atualidades
+Enunciado: A reforma administrativa tem como um de seus princ...
+Resp Correta: B - Revisar as regras de estabilidade dos servidores públicos.
+
+Q46 - Atualidades
+Enunciado: A **COP (Conferência das Partes)** é um evento rel...
+Resp Correta: D - As mudanças climáticas e o aquecimento global.
+
+Q47 - Atualidades
+Enunciado: O **Mercosul** é um bloco econômico formado, inici...
+Resp Correta: B - Brasil, Argentina, Paraguai e Uruguai.
+
+Q48 - Atualidades
+Enunciado: O conceito de **"Accountability"** na administraçã...
+Resp Correta: C - Prestação de contas e responsabilização dos agentes públicos.
+
+Q49 - Atualidades
+Enunciado: O orçamento público federal é composto pelo PPA, p...
+Resp Correta: B - Lei Orçamentária Anual (LOA).
+
+Q50 - Atualidades
+Enunciado: A **Taxa SELIC**, definida pelo COPOM do Banco Cen...
+Resp Correta: B - A taxa básica de juros da economia brasileira.
+
+Q51 - Administração Pública
+Enunciado: O princípio que veda a promoção pessoal de agentes...
+Resp Correta: B - Impessoalidade.
+
+Q52 - Administração Pública
+Enunciado: O modelo de administração pública caracterizado pe...
+Resp Correta: B - Burocrático.
+
+Q53 - Administração Pública
+Enunciado: A **FUNAI (Fundação Nacional do Índio)** é um exem...
+Resp Correta: C - Administração Indireta, com personalidade jurídica de direito público.
+
+Q54 - Administração Pública
+Enunciado: De acordo com a Lei nº 9.784/1999, o prazo para in...
+Resp Correta: B - 10 dias.
+
+Q55 - Administração Pública
+Enunciado: O controle da Administração Pública realizado pelo...
+Resp Correta: D - Interno.
+
+Q56 - Administração Pública
+Enunciado: A **A3P (Agenda Ambiental na Administração Pública...
+Resp Correta: B - Implantar práticas de sustentabilidade nos órgãos públicos.
+
+Q57 - Administração Pública
+Enunciado: O **TCU (Tribunal de Contas da União)** é responsá...
+Resp Correta: B - O controle externo da administração pública federal, auxiliando o Congresso Nacional.
+
+Q58 - Administração Pública
+Enunciado: Qual entidade da administração indireta tem seu ca...
+Resp Correta: D - Empresa Pública.
+
+Q59 - Administração Pública
+Enunciado: O **PPA (Plano Plurianual)** estabelece as diretri...
+Resp Correta: D - 4 anos.
+
+Q60 - Administração Pública
+Enunciado: O princípio orçamentário que determina que a LOA n...
+Resp Correta: D - Exclusividade.
+
+Q61 - Regime Jurídico
+Enunciado: O servidor público federal adquire estabilidade ap...
+Resp Correta: C - 3 anos de efetivo exercício e aprovação em avaliação especial de desempenho.
+
+Q62 - Regime Jurídico
+Enunciado: O retorno à atividade do servidor aposentado por i...
+Resp Correta: E - Reversão.
+
+Q63 - Regime Jurídico
+Enunciado: Constitui **proibição** ao servidor público (Lei n...
+Resp Correta: A - Participar da administração de empresa privada, mesmo sem prejuízo de suas funções.
+
+Q64 - Regime Jurídico
+Enunciado: A penalidade de **suspensão** pode ser aplicada ao...
+Resp Correta: C - 90 dias.
+
+Q65 - Regime Jurídico
+Enunciado: O servidor estável demitido por processo administr...
+Resp Correta: B - A demissão for considerada nula por decisão administrativa ou judicial.
+
+Q66 - Regime Jurídico
+Enunciado: A lei que estabelece normas de conduta para agente...
+Resp Correta: C - Lei nº 8.429/1992.
+
+Q67 - Regime Jurídico
+Enunciado: Constitui ato de improbidade administrativa que **...
+Resp Correta: D - Permitir que outrem utilize bem público para fins particulares.
+
+Q68 - Regime Jurídico
+Enunciado: A licença ao servidor para tratar de **interesses ...
+Resp Correta: D - Poderá ser concedida por até 3 anos, sem remuneração.
+
+Q69 - Regime Jurídico
+Enunciado: A perda do cargo público por servidor estável pode...
+Resp Correta: A - Avaliação periódica de desempenho, na forma de lei complementar.
+
+Q70 - Regime Jurídico
+Enunciado: O crime de **peculato** (art. 312 do Código Penal)...
+Resp Correta: C - Apropriar-se o funcionário público de dinheiro, valor ou qualquer outro bem móvel, público ou particular, de que tem a posse em razão do cargo.

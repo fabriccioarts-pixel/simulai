@@ -1,0 +1,8 @@
+name = "simulado-api"
+main = "src/index.js"
+compatibility_date = "2024-04-01"
+
+[[d1_databases]]
+binding = "meu_simulado_db"
+database_name = "meu_simulado_db"
+database_id = "9fb3e8ac-a440-4729-964f-5f8b58dd60c0"

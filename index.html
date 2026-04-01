@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulai | Ministério da Fazenda</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://js.stripe.com/v3/"></script>
+    <meta name="description" content="Simulai - Hub de estudos para o concurso ATA Ministério da Fazenda">
+</head>
+<body>
+    <div id="app">
+        <header class="main-header">
+            <div class="container header-container">
+                <div class="header-left">
+                    <button id="back-home-btn" class="btn-minimal quiz-only" style="display:none;" title="Voltar ao início">
+                        <i data-lucide="chevron-left"></i>
+                    </button>
+                    <div class="logo">
+                        <div class="logo-text">
+                            <h1>Simulai</h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <nav id="main-nav" class="main-nav">
+                        <!-- Navigation buttons -->
+                    </nav>
+                    <div id="user-profile-trigger">
+                        <!-- Avatar circle injected here -->
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main id="main-content" class="container">
+            <div class="loader">Carregando...</div>
+        </main>
+
+        <footer class="main-footer">
+            <div class="container footer-inner">
+                <p>&copy; 2026 Simulai</p>
+                <button id="theme-toggle" class="theme-toggle" title="Alternar Modo Escuro">
+                    <i data-lucide="sun-moon"></i>
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-container" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button id="close-modal" class="close-btn"><i data-lucide="x"></i></button>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script type="module" src="/main.js"></script>
+    <script>
+        // Initialize Lucide icons after DOM is ready
+        document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
+    </script>
+</body>
+</html>
+
