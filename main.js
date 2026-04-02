@@ -59,8 +59,10 @@ themeToggle.addEventListener('click', () => {
 });
 
 async function updateNavigation() {
-    const loggedIn = await auth.isLoggedIn();
-    const user = await auth.getUser();
+    const [loggedIn, user] = await Promise.all([
+        auth.isLoggedIn(),
+        auth.getUser()
+    ]);
     const profileTrigger = document.getElementById('user-profile-trigger');
 
     // Menu Central
@@ -69,7 +71,7 @@ async function updateNavigation() {
             <i data-lucide="home"></i> Início
         </button>
         ${loggedIn ? `
-            ${user.email === 'simulaaihub@gmail.com' ? `
+            ${user?.email === 'simulaaihub@gmail.com' ? `
                 <button class="nav-btn" data-view="admin">
                     <i data-lucide="settings"></i> Admin
                 </button>
@@ -82,7 +84,7 @@ async function updateNavigation() {
     `;
 
     // Avatar no Canto Superior Direito
-    if (loggedIn && profileTrigger) {
+    if (loggedIn && user && profileTrigger) {
         profileTrigger.innerHTML = `
             <button class="nav-btn account-avatar" data-view="account" style="width:36px; height:36px; border-radius:50%; background:var(--primary); color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1rem; border:none; cursor:pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.3); transition: transform 0.2s;">
                 ${user.name.charAt(0).toUpperCase()}
@@ -113,7 +115,6 @@ backHomeBtn.onclick = () => {
 };
 
 async function navigate(view) {
-    // Auth Protection
     const publicViews = ['home', 'login', 'register'];
     const loggedIn = await auth.isLoggedIn();
     
@@ -121,7 +122,6 @@ async function navigate(view) {
         return navigate('login');
     }
 
-    // Bloqueio de Admin (Apenas para o e-mail oficial)
     if (view === 'admin') {
         const user = await auth.getUser();
         if (user?.email !== 'simulaaihub@gmail.com') {
@@ -133,12 +133,9 @@ async function navigate(view) {
     state.currentView = view;
     mainContent.innerHTML = '<div class="loader">Carregando...</div>';
     
-    // Highlight active
-    await updateNavigation();
-    mainNav.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.view === view);
-    });
-
+    // Parallelize navigation update and content rendering
+    const navUpdatePromise = updateNavigation();
+    
     try {
         switch (view) {
             case 'home': await renderHome(mainContent, navigate); break;
@@ -150,6 +147,12 @@ async function navigate(view) {
             case 'admin': renderAdmin(mainContent); break;
             default: navigate('home');
         }
+        
+        await navUpdatePromise;
+        
+        mainNav.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.view === view);
+        });
     } catch (err) {
         console.error(err);
         mainContent.innerHTML = `<div class="error-box">Erro ao carregar módulo: ${err.message}.</div>`;
@@ -158,7 +161,6 @@ async function navigate(view) {
 
 // Initial state
 async function init() {
-    await updateNavigation();
     await navigate('home');
 }
 init();

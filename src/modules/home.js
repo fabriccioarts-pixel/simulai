@@ -4,25 +4,30 @@ import { auth } from './auth.js';
 export async function renderHome(container, navigateFn) {
     const apostilas = hubData.apostilas || [];
 
-    // Sync database count for accurate card display
-    try {
-        const res = await fetch("http://localhost:8787/questoes");
-        const json = await res.json();
-        if (json.success && json.data) {
-            hubData.quiz = json.data.map(q => ({
-                id: parseInt(q.original_id) || q.id,
-                disciplina: q.discipline,
-                enunciado: q.question,
-                alternativas: JSON.parse(q.options),
-                explicacao: q.explanation,
-                banca: q.banca || "ESAF",
-                pegadinha_esaf: q.pegadinha || ""
-            }));
+    if (!hubData.quiz || hubData.quiz.length === 0) {
+        try {
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8787'}/questoes`);
+            const json = await res.json();
+            if (json.success && json.data) {
+                hubData.quiz = json.data.map(q => ({
+                    id: parseInt(q.original_id) || q.id,
+                    disciplina: q.discipline,
+                    enunciado: q.question,
+                    alternativas: JSON.parse(q.options),
+                    explicacao: q.explanation,
+                    banca: q.banca || "ESAF",
+                    pegadinha_esaf: q.pegadinha || ""
+                }));
+            }
+        } catch(e) {
+            console.warn("Could not sync quiz data", e);
         }
-    } catch(e) {}
+    }
 
-    const totalQuestions = hubData.quiz.length;
-    const permissions = await auth.getPermissions();
+    const [totalQuestions, permissions] = await Promise.all([
+        hubData.quiz ? hubData.quiz.length : 0,
+        auth.getPermissions()
+    ]);
     const hasGeneralAccess = permissions.includes("1");
 
     container.innerHTML = `

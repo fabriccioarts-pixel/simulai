@@ -4,37 +4,47 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // Inicializa o cliente se disponível globalmente
 const supabase = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
+let cachedUser = null;
+let cachedPermissions = null;
+
 export const auth = {
     async getUser() {
+        if (cachedUser) return cachedUser;
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return null;
-        return {
+        cachedUser = {
             id: user.id,
             email: user.email,
             name: user.user_metadata?.full_name || user.email.split('@')[0],
             created_at: user.created_at,
             phone: user.user_metadata?.phone || ""
         };
+        return cachedUser;
     },
     async logout() {
         await supabase.auth.signOut();
+        cachedUser = null;
+        cachedPermissions = null;
         window.location.reload();
     },
     async isLoggedIn() {
+        if (cachedUser) return true;
         const { data: { session } } = await supabase.auth.getSession();
         return !!session;
     },
     async getPermissions() {
+        if (cachedPermissions) return cachedPermissions;
         const user = await this.getUser();
         if (!user) return [];
         try {
-            const res = await fetch("http://localhost:8787/auth/permissions", {
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8787'}/auth/permissions`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ userId: user.id })
             });
             const data = await res.json();
-            return data.permissions || [];
+            cachedPermissions = data.permissions || [];
+            return cachedPermissions;
         } catch (e) { return []; }
     }
 };
@@ -113,7 +123,7 @@ export function renderLogin(container, navigateFn) {
             btn.innerText = "Enviando...";
 
             const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: 'http://localhost:5173/?view=account'
+                redirectTo: `${window.location.origin}/?view=account`
             });
 
             if (error) {
@@ -355,7 +365,7 @@ export async function renderAccount(container) {
             checkoutBtn.innerText = "Preparando acesso...";
             
             try {
-                const response = await fetch("http://localhost:8787/payment/create-checkout-session", {
+                const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8787'}/payment/create-checkout-session`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ userId: user.id, email: user.email })

@@ -7,7 +7,7 @@ export function renderAdmin(container) {
     // Função para carregar da base D1 real filtrado por CONTEÚDO!
     const loadDB = async (cID = 1) => {
         try {
-            const res = await fetch(`http://localhost:8787/questoes?content_id=${cID}`);
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8787'}/questoes?content_id=${cID}`);
             const json = await res.json();
             if (json.success && json.data) {
                 questions = json.data.map(q => ({
@@ -292,7 +292,7 @@ export function renderAdmin(container) {
                     const btn = document.getElementById('clear-all-q-btn');
                     btn.disabled = true;
                     btn.innerHTML = "Limpando...";
-                    const res = await fetch(`http://localhost:8787/questoes/limpar?content_id=${contentId}`, { method: 'DELETE' });
+                    const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8787'}/questoes/limpar?content_id=${contentId}`, { method: 'DELETE' });
                     if (!res.ok) throw new Error(await res.text());
                     await loadDB(contentId);
                     alert("Banco de dados limpo!");
@@ -319,7 +319,7 @@ export function renderAdmin(container) {
                     if(q.db_id) {
                         try {
                             btnEl.innerText = "...";
-                            const res = await fetch("http://localhost:8787/questoes/" + q.db_id, { method: "DELETE" });
+                            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8787'}/questoes/${q.db_id}`, { method: "DELETE" });
                             if (!res.ok) throw new Error("Erro na API");
                             await loadDB(contentId);
                         } catch(err) { 
@@ -452,7 +452,7 @@ export function renderAdmin(container) {
                     content_id: contentId
                 };
                 
-                const apiUrl = `http://localhost:8787/questoes?content_id=${contentId}`;
+                const apiUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:8787'}/questoes?content_id=${contentId}`;
                 const res = await fetch(apiUrl, {
                     method: q.db_id ? "PUT" : "POST",
                     headers: { "Content-Type": "application/json" },
@@ -466,7 +466,7 @@ export function renderAdmin(container) {
                 await loadDB(contentId); // sincroniza novidades
                 navigate('questions', { contentId });
             } catch(e) {
-                alert(`Erro grave de Banco de Dados: ${e.message}\nVerifique se o Worker (API) está rodando em http://localhost:8787`);
+                alert(`Erro grave de Banco de Dados: ${e.message}\nVerifique se o Worker (API) está rodando em ${import.meta.env.VITE_API_URL || 'http://localhost:8787'}`);
                 btn.disabled = false;
                 btn.innerHTML = `<i data-lucide="save"></i> Tentar Novamente`;
             }

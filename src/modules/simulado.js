@@ -10,25 +10,28 @@ export async function renderSimulado(container) {
     quizContent.className = 'quiz-container';
     container.appendChild(quizContent);
 
-    // Initial loading state
-    quizContent.innerHTML = '<div style="text-align: center; color: white; padding: 4rem;">Sincronizando Banco de Dados... 📚</div>';
-
-    // Fetch database state before showing start screen
-    try {
-        const res = await fetch("http://localhost:8787/questoes");
-        const json = await res.json();
-        if (json.success && json.data) {
-            hubData.quiz = json.data.map(q => ({
-                id: parseInt(q.original_id) || q.id,
-                disciplina: q.discipline,
-                enunciado: q.question,
-                alternativas: JSON.parse(q.options),
-                explicacao: q.explanation,
-                banca: q.banca || "ESAF",
-                pegadinha_esaf: q.pegadinha || ""
-            }));
+    // Sync database count only if not already loaded to speed up rendering
+    if (!hubData.quiz || hubData.quiz.length === 0) {
+        // Initial loading state only shown when fetching
+        quizContent.innerHTML = '<div class="loader">Sincronizando Banco de Dados...</div>';
+        try {
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8787'}/questoes`);
+            const json = await res.json();
+            if (json.success && json.data) {
+                hubData.quiz = json.data.map(q => ({
+                    id: parseInt(q.original_id) || q.id,
+                    disciplina: q.discipline,
+                    enunciado: q.question,
+                    alternativas: JSON.parse(q.options),
+                    explicacao: q.explanation,
+                    banca: q.banca || "ESAF",
+                    pegadinha_esaf: q.pegadinha || ""
+                }));
+            }
+        } catch(e) { 
+            console.warn("Using local fallback data", e); 
         }
-    } catch(e) { console.warn("Usando fallback de dados locais"); }
+    }
 
     const totalQuestions = hubData.quiz.length;
 
