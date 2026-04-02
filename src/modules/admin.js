@@ -292,7 +292,10 @@ export function renderAdmin(container) {
                     const btn = document.getElementById('clear-all-q-btn');
                     btn.disabled = true;
                     btn.innerHTML = "Limpando...";
-                    const res = await fetch(`https://simulado-api.simulado-ata-mf.workers.dev/questoes/limpar?content_id=${contentId}`, { method: 'DELETE' });
+                    const res = await fetch(`https://simulado-api.simulado-ata-mf.workers.dev/questoes/limpar?content_id=${contentId}`, { 
+                        method: 'DELETE',
+                        headers: { "Authorization": "Bearer S3NH4_ADM1N_SIMULADOS" }
+                    });
                     if (!res.ok) throw new Error(await res.text());
                     await loadDB(contentId);
                     alert("Banco de dados limpo!");
@@ -319,7 +322,10 @@ export function renderAdmin(container) {
                     if(q.db_id) {
                         try {
                             btnEl.innerText = "...";
-                            const res = await fetch(`https://simulado-api.simulado-ata-mf.workers.dev/questoes/${q.db_id}`, { method: "DELETE" });
+                            const res = await fetch(`https://simulado-api.simulado-ata-mf.workers.dev/questoes/${q.db_id}`, { 
+                                method: "DELETE",
+                                headers: { "Authorization": "Bearer S3NH4_ADM1N_SIMULADOS" }
+                            });
                             if (!res.ok) throw new Error("Erro na API");
                             await loadDB(contentId);
                         } catch(err) { 
@@ -455,7 +461,10 @@ export function renderAdmin(container) {
                 const apiUrl = `https://simulado-api.simulado-ata-mf.workers.dev/questoes?content_id=${contentId}`;
                 const res = await fetch(apiUrl, {
                     method: q.db_id ? "PUT" : "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer S3NH4_ADM1N_SIMULADOS"
+                    },
                     body: JSON.stringify(payloadObj)
                 });
                 
