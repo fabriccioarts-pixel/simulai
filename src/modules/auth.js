@@ -368,7 +368,11 @@ export async function renderAccount(container) {
                 const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8787'}/payment/create-checkout-session`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ userId: user.id, email: user.email })
+                    body: JSON.stringify({ 
+                        userId: user.id, 
+                        email: user.email,
+                        origin: window.location.origin 
+                    })
                 });
                 const session = await response.json();
                 

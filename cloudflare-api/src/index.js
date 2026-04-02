@@ -124,7 +124,8 @@ export default {
     // =============================================
     if (url.pathname === "/payment/create-checkout-session" && request.method === "POST") {
       try {
-        const { userId, email } = await request.json();
+        const { userId, email, origin } = await request.json();
+        const frontendUrl = origin || "http://localhost:5173";
         
         const stripeRes = await fetch("https://api.stripe.com/v1/checkout/sessions", {
           method: "POST",
@@ -133,8 +134,8 @@ export default {
             "Content-Type": "application/x-www-form-urlencoded"
           },
           body: new URLSearchParams({
-            "success_url": "http://localhost:5173/?view=account&success=true",
-            "cancel_url": "http://localhost:5173/?view=account&canceled=true",
+            "success_url": `${frontendUrl}/?view=account&success=true`,
+            "cancel_url": `${frontendUrl}/?view=account&canceled=true`,
             "line_items[0][price_data][currency]": "brl",
             "line_items[0][price_data][product_data][name]": "Simulai Premium Vitalício",
             "line_items[0][price_data][unit_amount]": "9700", // R$ 97,00
