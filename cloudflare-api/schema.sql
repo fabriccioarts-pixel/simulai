@@ -1,5 +1,12 @@
-DROP TABLE IF EXISTS Questions;
-CREATE TABLE Questions (
+-- 1. Create UserPermissions table if it doesn't exist
+CREATE TABLE IF NOT EXISTS UserPermissions (
+  user_id INTEGER NOT NULL,
+  content_id INTEGER NOT NULL,
+  PRIMARY KEY (user_id, content_id)
+);
+
+-- 2. Create Questions table if it doesn't exist
+CREATE TABLE IF NOT EXISTS Questions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   original_id TEXT,
   discipline TEXT,
@@ -12,7 +19,8 @@ CREATE TABLE Questions (
   content_id INTEGER DEFAULT 1
 );
 
-CREATE TABLE Users (
+-- 3. Create Users table if it doesn't exist
+CREATE TABLE IF NOT EXISTS Users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   email TEXT UNIQUE NOT NULL,
@@ -20,3 +28,7 @@ CREATE TABLE Users (
   password TEXT NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 4. Try adding new columns to Users (they might already exist locally but not remotely)
+ALTER TABLE Users ADD COLUMN verification_code TEXT;
+ALTER TABLE Users ADD COLUMN is_verified INTEGER DEFAULT 0;
