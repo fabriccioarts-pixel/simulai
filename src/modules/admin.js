@@ -294,7 +294,7 @@ export function renderAdmin(container) {
                     btn.innerHTML = "Limpando...";
                     const res = await fetch(`https://simulado-api.simulado-ata-mf.workers.dev/questoes/limpar?content_id=${contentId}`, { 
                         method: 'DELETE',
-                        headers: { "Authorization": "Bearer S3NH4_ADM1N_SIMULADOS" }
+                        headers: { "Authorization": "Bearer 123456" }
                     });
                     if (!res.ok) throw new Error(await res.text());
                     await loadDB(contentId);
@@ -324,7 +324,7 @@ export function renderAdmin(container) {
                             btnEl.innerText = "...";
                             const res = await fetch(`https://simulado-api.simulado-ata-mf.workers.dev/questoes/${q.db_id}`, { 
                                 method: "DELETE",
-                                headers: { "Authorization": "Bearer S3NH4_ADM1N_SIMULADOS" }
+                                headers: { "Authorization": "Bearer 123456" }
                             });
                             if (!res.ok) throw new Error("Erro na API");
                             await loadDB(contentId);
@@ -463,7 +463,7 @@ export function renderAdmin(container) {
                     method: q.db_id ? "PUT" : "POST",
                     headers: { 
                         "Content-Type": "application/json",
-                        "Authorization": "Bearer S3NH4_ADM1N_SIMULADOS"
+                        "Authorization": "Bearer 123456"
                     },
                     body: JSON.stringify(payloadObj)
                 });
