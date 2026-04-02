@@ -6,7 +6,7 @@ export async function renderHome(container, navigateFn) {
 
     if (!hubData.quiz || hubData.quiz.length === 0) {
         try {
-            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8787'}/questoes`);
+            const res = await fetch(`https://simulado-api.simulado-ata-mf.workers.dev/questoes`);
             const json = await res.json();
             if (json.success && json.data) {
                 hubData.quiz = json.data.map(q => ({

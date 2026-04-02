@@ -15,7 +15,7 @@ export async function renderSimulado(container) {
         // Initial loading state only shown when fetching
         quizContent.innerHTML = '<div class="loader">Sincronizando Banco de Dados...</div>';
         try {
-            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8787'}/questoes`);
+            const res = await fetch(`https://simulado-api.simulado-ata-mf.workers.dev/questoes`);
             const json = await res.json();
             if (json.success && json.data) {
                 hubData.quiz = json.data.map(q => ({

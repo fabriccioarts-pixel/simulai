@@ -37,7 +37,7 @@ export const auth = {
         const user = await this.getUser();
         if (!user) return [];
         try {
-            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8787'}/auth/permissions`, {
+            const res = await fetch(`https://simulado-api.simulado-ata-mf.workers.dev/auth/permissions`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ userId: user.id })
@@ -365,7 +365,7 @@ export async function renderAccount(container) {
             checkoutBtn.innerText = "Preparando acesso...";
             
             try {
-                const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8787'}/payment/create-checkout-session`, {
+                const response = await fetch(`https://simulado-api.simulado-ata-mf.workers.dev/payment/create-checkout-session`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ 
