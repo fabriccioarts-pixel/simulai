@@ -488,6 +488,8 @@ app.post('/api/quiz/start', async (c) => {
     const quiz = await db.prepare("SELECT * FROM Quizzes WHERE id = ? AND is_active = 1").bind(quizId).first();
     if (!quiz) return c.json({ error: 'Quiz não encontrado' }, 404);
 
+    const { restart } = await c.req.json();
+
     // Verificar acesso freemium (apenas quizzes premium)
     if (quiz.is_premium) {
       const isSubscriber = await hasActiveSubscription(db, userId);
@@ -503,15 +505,22 @@ app.post('/api/quiz/start', async (c) => {
       }
     }
 
-    // Garante que o usuário existe na tabela Users_v2 antes de criar progresso
+    // Garante que o usuário existe
     await db.prepare(
       "INSERT OR IGNORE INTO Users_v2 (id, email, name) VALUES (?, ?, ?)"
     ).bind(userId, '', '').run();
 
-    // Busca ou cria sessão de progresso
+    // Busca progresso
     let progress = await db.prepare(
       "SELECT * FROM UserProgress WHERE user_id = ? AND quiz_id = ?"
     ).bind(userId, quizId).first();
+
+    if (restart && progress) {
+        await db.prepare(
+            "UPDATE UserProgress SET current_question_index = 0, score = 0, answers = '[]', completed = 0 WHERE id = ?"
+        ).bind(progress.id).run();
+        progress = { ...progress, current_question_index: 0, score: 0, answers: '[]', completed: 0 };
+    }
 
     if (!progress) {
       const progressId = nanoid();
