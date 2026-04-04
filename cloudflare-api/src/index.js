@@ -1076,4 +1076,83 @@ app.get('/questoes', async (c) => {
 // ============================================================
 app.notFound(c => c.json({ error: 'Not Found' }, 404));
 
+// Estatísticas de Desempenho do Aluno
+app.get('/api/user/stats', async (c) => {
+  const userId = c.get('userId');
+  if (!userId) return c.json({ error: 'Não autorizado' }, 401);
+  const db = c.env.meu_simulado_db;
+
+  try {
+    // 1. Busca todos os progressos concluídos
+    const sessions = await db.prepare(
+      "SELECT p.*, q.title as quiz_title FROM UserProgress p JOIN Quizzes q ON p.quiz_id = q.id WHERE p.user_id = ? AND p.completed = 1 ORDER BY p.updated_at DESC"
+    ).bind(userId).all();
+
+    const stats = {
+      totalQuizzes: sessions.results.length,
+      totalScore: 0,
+      totalQuestions: 0,
+      bySubject: {} // { 'Direito': { correct: 0, total: 0 } }
+    };
+
+    // 2. Processa cada sessão para extrair desempenho por matéria
+    for (const session of sessions.results) {
+      const answers = JSON.parse(session.answers || '[]');
+      stats.totalScore += session.score;
+      
+      // Busca as matérias de todas as questões desse quiz
+      const questions = await db.prepare(
+        "SELECT id, discipline FROM Questions WHERE quiz_id = ?"
+      ).bind(session.quiz_id).all();
+      
+      stats.totalQuestions += questions.results.length;
+
+      // Mapeia respostas para matérias
+      questions.results.forEach(q => {
+        const subject = q.discipline || 'Geral';
+        if (!stats.bySubject[subject]) stats.bySubject[subject] = { correct: 0, total: 0 };
+        
+        const userAnswer = answers.find(a => a.questionId == q.id);
+        stats.bySubject[subject].total++;
+        if (userAnswer && userAnswer.correct) {
+          stats.bySubject[subject].correct++;
+        }
+      });
+    }
+
+    // 3. Gera feedbacks inteligentes baseados nos erros
+    const feedbacks = Object.keys(stats.bySubject).map(subject => {
+      const s = stats.bySubject[subject];
+      const perc = s.total > 0 ? (s.correct / s.total) * 100 : 0;
+      let status = 'good';
+      let message = '';
+
+      if (perc < 50) {
+        status = 'critical';
+        message = `Atenção Crítica: Você está com aproveitamento baixo. Recomendamos revisar a teoria de base desta matéria urgentemente.`;
+      } else if (perc < 75) {
+        status = 'warning';
+        message = `Bom caminho, mas precisa de mais fixação. Foque em exercícios de nível médio para subir seu percentual.`;
+      } else {
+        status = 'success';
+        message = `Excelente desempenho! Você domina esta área. Mantenha apenas revisões periódicas.`;
+      }
+
+      return { subject, percentage: Math.round(perc), status, message, total: s.total };
+    });
+
+    return c.json({
+      success: true,
+      summary: {
+        totalQuizzes: stats.totalQuizzes,
+        avgAccuracy: stats.totalQuestions > 0 ? Math.round((stats.totalScore / stats.totalQuestions) * 100) : 0,
+      },
+      feedbacks,
+      history: sessions.results.slice(0, 10) // Últimos 10 simulados
+    });
+  } catch (e) {
+    return c.json({ success: false, error: e.message }, 500);
+  }
+});
+
 export default app;
