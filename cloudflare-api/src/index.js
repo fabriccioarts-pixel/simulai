@@ -39,6 +39,17 @@ app.use('*', async (c, next) => {
 
 const nanoid = () => crypto.randomUUID();
 
+const parseOptions = (raw) => {
+  try {
+    if (!raw) return [];
+    if (typeof raw === 'object') return raw; // already parsed if D1/Hono did something
+    return JSON.parse(raw);
+  } catch (e) {
+    console.error("Failed to parse options JSON:", raw);
+    return [];
+  }
+};
+
 const getDateBRT = () => {
   const now = new Date();
   // UTC-3
@@ -527,7 +538,7 @@ app.post('/api/quiz/start', async (c) => {
       completed: !!progress.completed,
       currentQuestion: currentQuestion ? {
         ...currentQuestion,
-        options: JSON.parse(currentQuestion.options || '[]').map(o => ({ letra: o.letra, texto: o.texto })) // hide correct
+        options: parseOptions(currentQuestion.options).map(o => ({ letra: o.letra, texto: o.texto })) // hide correct
       } : null,
     });
   } catch (e) {
@@ -562,9 +573,11 @@ app.post('/api/quiz/answer', async (c) => {
     if (progress.completed) return c.json({ error: 'Quiz já finalizado' }, 400);
 
     // Busca a questão com a resposta correta
+    const qIdNum = parseInt(questionId);
+    const finalQId = isNaN(qIdNum) ? questionId : qIdNum;
     const question = await db.prepare(
       "SELECT * FROM Questions WHERE id = ? AND quiz_id = ?"
-    ).bind(questionId, progress.quiz_id).first();
+    ).bind(finalQId, progress.quiz_id).first();
     if (!question) return c.json({ error: 'Questão não encontrada' }, 404);
 
     // Verifica o limite freemium
@@ -590,7 +603,7 @@ app.post('/api/quiz/answer', async (c) => {
       }
     }
 
-    const options = JSON.parse(question.options || '[]');
+    const options = parseOptions(question.options);
     const correctOption = options.find(o => o.correta);
     const correctLetter = correctOption?.letra || question.answer;
     const isCorrect = selectedLetter === correctLetter;
@@ -623,7 +636,7 @@ app.post('/api/quiz/answer', async (c) => {
       pegadinha: question.pegadinha || '',
       nextQuestion: nextQuestion ? {
         ...nextQuestion,
-        options: JSON.parse(nextQuestion.options || '[]').map(o => ({ letra: o.letra, texto: o.texto }))
+        options: parseOptions(nextQuestion.options).map(o => ({ letra: o.letra, texto: o.texto }))
       } : null,
       currentQuestionIndex: newIndex,
       totalQuestions: questions.length,
@@ -706,7 +719,7 @@ app.get('/api/admin/migrate/fix-db', adminOnly, async (c) => {
 app.get('/api/admin/quizzes', adminOnly, async (c) => {
   try {
     const { results } = await c.env.meu_simulado_db.prepare(
-      "SELECT q.*, (SELECT COUNT(*) FROM Questions WHERE quiz_id = q.id) as question_count FROM Quizzes q"
+      "SELECT q.*, (SELECT COUNT(*) FROM Questions WHERE quiz_id = q.id) as question_count FROM Quizzes q ORDER BY q.id DESC"
     ).all();
     return c.json({ success: true, quizzes: results });
   } catch (e) {
@@ -716,13 +729,13 @@ app.get('/api/admin/quizzes', adminOnly, async (c) => {
 
 app.post('/api/admin/quizzes', adminOnly, async (c) => {
   try {
-    const { title, subject, is_premium, difficulty } = await c.req.json();
+    const { title, description, subject, is_premium, difficulty, image_url, attachments } = await c.req.json();
     if (!title) return c.json({ success: false, error: 'Título é obrigatório' }, 400);
     
     const id = nanoid();
     await c.env.meu_simulado_db.prepare(
-      "INSERT INTO Quizzes (id, title, subject, is_premium, difficulty) VALUES (?, ?, ?, ?, ?)"
-    ).bind(id, title, subject || 'Geral', is_premium ? 1 : 0, difficulty || 'medium').run();
+      "INSERT INTO Quizzes (id, title, description, subject, is_premium, difficulty, image_url, attachments, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, unixepoch())"
+    ).bind(id, title, description || '', subject || 'Geral', is_premium ? 1 : 0, difficulty || 'medium', image_url || '', attachments || '').run();
     return c.json({ success: true, id });
   } catch (e) {
     return c.json({ success: false, error: e.message }, 500);
@@ -733,10 +746,10 @@ app.post('/api/admin/quizzes', adminOnly, async (c) => {
 app.put('/api/admin/quizzes/:id', adminOnly, async (c) => {
   try {
     const id = c.req.param('id');
-    const { title, subject, is_premium, difficulty } = await c.req.json();
+    const { title, description, subject, is_premium, difficulty, is_active, image_url, attachments } = await c.req.json();
     await c.env.meu_simulado_db.prepare(
-      "UPDATE Quizzes SET title = ?, subject = ?, is_premium = ?, difficulty = ? WHERE id = ?"
-    ).bind(title, subject || '', is_premium ? 1 : 0, difficulty || 'medium', id).run();
+      "UPDATE Quizzes SET title = ?, description = ?, subject = ?, is_premium = ?, difficulty = ?, is_active = ?, image_url = ?, attachments = ? WHERE id = ?"
+    ).bind(title, description || '', subject || '', is_premium ? 1 : 0, difficulty || 'medium', is_active ? 1 : 0, image_url || '', attachments || '', id).run();
     return c.json({ success: true });
   } catch (e) {
     return c.json({ success: false, error: e.message }, 500);
@@ -935,9 +948,12 @@ app.put('/api/admin/questions/:id', adminOnly, async (c) => {
   try {
     const id = c.req.param('id');
     const q = await c.req.json();
+    const idNum = parseInt(id);
+    const finalId = isNaN(idNum) ? id : idNum;
+    
     await c.env.meu_simulado_db.prepare(
       "UPDATE Questions SET question = ?, options = ?, answer = ?, explanation = ?, discipline = ?, banca = ?, pegadinha = ? WHERE id = ?"
-    ).bind(q.question, q.options, q.answer, q.explanation || '', q.discipline || '', q.banca || 'ESAF', q.pegadinha || '', id).run();
+    ).bind(q.question, q.options, q.answer, q.explanation || '', q.discipline || '', q.banca || 'ESAF', q.pegadinha || '', finalId).run();
     return c.json({ success: true });
   } catch (e) {
     return c.json({ success: false, error: e.message }, 500);
