@@ -694,7 +694,7 @@ app.get('/api/admin/migrate/fix-db', adminOnly, async (c) => {
     await db.batch([
       db.prepare("CREATE TABLE IF NOT EXISTS Users (id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, name TEXT, phone TEXT, role TEXT DEFAULT 'user', stripe_customer_id TEXT, created_at INTEGER DEFAULT (unixepoch()))"),
       db.prepare("CREATE TABLE IF NOT EXISTS Subscriptions (id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES Users(id), status TEXT NOT NULL DEFAULT 'inactive', plan TEXT DEFAULT 'monthly', stripe_subscription_id TEXT UNIQUE, current_period_end INTEGER, created_at INTEGER DEFAULT (unixepoch()))"),
-      db.prepare("CREATE TABLE IF NOT EXISTS Quizzes (id TEXT PRIMARY KEY, title TEXT NOT NULL, description TEXT, subject TEXT, is_premium INTEGER DEFAULT 0, difficulty TEXT DEFAULT 'medium', is_active INTEGER DEFAULT 1, created_at INTEGER DEFAULT (unixepoch()))"),
+      db.prepare("CREATE TABLE IF NOT EXISTS Quizzes (id TEXT PRIMARY KEY, title TEXT NOT NULL, description TEXT, subject TEXT, is_premium INTEGER DEFAULT 0, difficulty TEXT DEFAULT 'medium', is_active INTEGER DEFAULT 1, image_url TEXT, attachments TEXT, created_at INTEGER DEFAULT (unixepoch()))"),
       db.prepare("CREATE TABLE IF NOT EXISTS Questions (id TEXT PRIMARY KEY, quiz_id TEXT REFERENCES Quizzes(id), discipline TEXT, question TEXT NOT NULL, options TEXT NOT NULL, answer TEXT, explanation TEXT, banca TEXT DEFAULT 'ESAF', pegadinha TEXT, image_url TEXT, sort_order INTEGER DEFAULT 0, created_at INTEGER DEFAULT (unixepoch()))"),
       db.prepare("CREATE TABLE IF NOT EXISTS UserProgress (id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES Users(id), quiz_id TEXT NOT NULL REFERENCES Quizzes(id), current_question_index INTEGER DEFAULT 0, score INTEGER DEFAULT 0, answers TEXT DEFAULT '[]', completed INTEGER DEFAULT 0, started_at INTEGER DEFAULT (unixepoch()), completed_at INTEGER, UNIQUE(user_id, quiz_id))"),
       db.prepare("CREATE TABLE IF NOT EXISTS UserDailyUsage (id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES Users(id), date TEXT NOT NULL, free_questions_used INTEGER DEFAULT 0, UNIQUE(user_id, date))")
@@ -702,12 +702,20 @@ app.get('/api/admin/migrate/fix-db', adminOnly, async (c) => {
 
     // 2. Correção de Colunas (Migration Incremental)
     const questionsCols = await db.prepare("PRAGMA table_info(Questions)").all();
-    const hasCol = (name) => questionsCols.results.some(c => c.name === name);
+    const quizCols = await db.prepare("PRAGMA table_info(Quizzes)").all();
+    
+    const hasCol = (results, name) => results.some(c => c.name === name);
 
-    if (!hasCol('quiz_id')) await db.prepare("ALTER TABLE Questions ADD COLUMN quiz_id TEXT REFERENCES Quizzes(id)").run();
-    if (!hasCol('pegadinha')) await db.prepare("ALTER TABLE Questions ADD COLUMN pegadinha TEXT").run();
-    if (!hasCol('image_url')) await db.prepare("ALTER TABLE Questions ADD COLUMN image_url TEXT").run();
-    if (!hasCol('sort_order')) await db.prepare("ALTER TABLE Questions ADD COLUMN sort_order INTEGER DEFAULT 0").run();
+    if (!hasCol(questionsCols.results, 'quiz_id')) await db.prepare("ALTER TABLE Questions ADD COLUMN quiz_id TEXT REFERENCES Quizzes(id)").run();
+    if (!hasCol(questionsCols.results, 'pegadinha')) await db.prepare("ALTER TABLE Questions ADD COLUMN pegadinha TEXT").run();
+    if (!hasCol(questionsCols.results, 'image_url')) await db.prepare("ALTER TABLE Questions ADD COLUMN image_url TEXT").run();
+    if (!hasCol(questionsCols.results, 'sort_order')) await db.prepare("ALTER TABLE Questions ADD COLUMN sort_order INTEGER DEFAULT 0").run();
+
+    if (!hasCol(quizCols.results, 'image_url')) await db.prepare("ALTER TABLE Quizzes ADD COLUMN image_url TEXT").run();
+    if (!hasCol(quizCols.results, 'attachments')) await db.prepare("ALTER TABLE Quizzes ADD COLUMN attachments TEXT").run();
+    
+    // Garante que simulados antigos sem o campo is_active fiquem visíveis
+    await db.prepare("UPDATE Quizzes SET is_active = 1 WHERE is_active IS NULL").run();
 
     return c.json({ success: true, message: "Banco de dados sincronizado com sucesso!" });
   } catch (e) {
@@ -719,7 +727,7 @@ app.get('/api/admin/migrate/fix-db', adminOnly, async (c) => {
 app.get('/api/admin/quizzes', adminOnly, async (c) => {
   try {
     const { results } = await c.env.meu_simulado_db.prepare(
-      "SELECT q.*, (SELECT COUNT(*) FROM Questions WHERE quiz_id = q.id) as question_count FROM Quizzes q ORDER BY q.id DESC"
+      "SELECT q.*, (SELECT COUNT(*) FROM Questions WHERE quiz_id = q.id) as question_count FROM Quizzes q ORDER BY q.created_at DESC"
     ).all();
     return c.json({ success: true, quizzes: results });
   } catch (e) {
