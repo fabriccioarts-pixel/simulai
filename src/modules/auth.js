@@ -295,10 +295,18 @@ export async function renderAccount(container) {
         <div class="account-view" style="max-width:800px; margin: 0 auto; padding: 0 1.5rem; animation: fade-in 0.3s ease-out;">
             <div class="account-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.5rem; margin-bottom:2.5rem; border-bottom:1px solid var(--border); padding-bottom:2rem;">
                 <div>
-                    <h2 style="font-size:2rem; margin-bottom:0.5rem;">Minha Conta</h2>
-                    <p style="color:var(--gray-400);">Área de segurança e dados pessoais do seu perfil.</p>
+                    <h2 style="font-size:2.2rem; margin-bottom:0.5rem; letter-spacing:-0.03em;">Minha Experiência</h2>
+                    <p style="color:var(--gray-400);">Acompanhe sua evolução e pontos de melhoria nos simulados.</p>
                 </div>
-                <button onclick="window.simulaiLogout()" class="btn-secondary" style="color:var(--danger); border-color:var(--danger); white-space:nowrap;"><i data-lucide="log-out"></i> Sair do Simulai</button>
+                <button onclick="window.simulaiLogout()" class="btn-minimal" style="color:var(--gray-500); border:1px solid var(--border); padding:0.6rem 1.2rem; border-radius:8px;"><i data-lucide="log-out" style="width:16px;"></i> Sair da Minha Conta</button>
+            </div>
+
+            <!-- DASHBOARD DE DESEMPENHO -->
+            <div id="user-performance-dashboard" style="margin-bottom:3rem; background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:16px; min-height:200px; padding:2rem; position:relative; overflow:hidden;">
+                <div class="loader-container" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:200px;">
+                    <div class="spinner"></div>
+                    <p style="margin-top:1rem; color:var(--gray-500); font-size:0.9rem;">Analisando seu histórico de questões...</p>
+                </div>
             </div>
 
             <div class="account-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:1.5rem;">
@@ -455,5 +463,68 @@ export async function renderAccount(container) {
         });
     });
 
-    // Removido listener manual de logout para usar atributo onclick direto no HTML
+    // 3. Busca Estatísticas de Desempenho
+    (async () => {
+        try {
+            const res = await apiFetch('/api/user/stats');
+            const data = await res.json();
+            const dash = document.getElementById('user-performance-dashboard');
+            
+            if (!data.success || data.history.length === 0) {
+                dash.innerHTML = `
+                    <div style="text-align:center; padding:2rem;">
+                        <i data-lucide="line-chart" style="width:40px; margin-bottom:1rem; color:var(--gray-700);"></i>
+                        <p style="color:var(--gray-500);">Você ainda não concluiu nenhum simulado. <br>Seu histórico aparecerá aqui após o primeiro teste!</p>
+                    </div>
+                `;
+            } else {
+                dash.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+                        <h3 style="font-size:1.1rem; display:flex; align-items:center; gap:0.5rem;"><i data-lucide="bar-chart-3" style="color:var(--primary);"></i> Diagnóstico de Estudos</h3>
+                        <div style="font-size:0.8rem; color:var(--gray-500);">Precisão Média: <span style="color:white; font-weight:700;">${data.summary.avgAccuracy}%</span></div>
+                    </div>
+                    
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:1.5rem;">
+                        <!-- Feedback por Matéria -->
+                        <div style="display:flex; flex-direction:column; gap:1.2rem;">
+                            ${data.feedbacks.map(f => {
+                                const colors = { critical: '#ef4444', warning: '#f59e0b', success: '#10b981' };
+                                return `
+                                    <div style="background:rgba(255,255,255,0.01); border-radius:12px; padding:1.2rem; border-left:4px solid ${colors[f.status] || 'gray'};">
+                                        <div style="display:flex; justify-content:space-between; margin-bottom:0.75rem;">
+                                            <span style="font-weight:700; font-size:0.9rem;">${f.subject}</span>
+                                            <span style="font-weight:900; color:${colors[f.status]};">${f.percentage}%</span>
+                                        </div>
+                                        <div style="width:100%; height:4px; background:rgba(255,255,255,0.05); border-radius:2px; margin-bottom:1rem; overflow:hidden;">
+                                            <div style="width:${f.percentage}%; height:100%; background:${colors[f.status]}; border-radius:2px;"></div>
+                                        </div>
+                                        <p style="font-size:0.75rem; color:var(--gray-400); line-height:1.4;">${f.message}</p>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+
+                        <!-- Histórico Recente -->
+                        <div style="background:rgba(0,0,0,0.1); padding:1.5rem; border-radius:12px;">
+                            <h4 style="font-size:0.8rem; color:var(--gray-500); margin-bottom:1rem; text-transform:uppercase;">Últimas Atividades</h4>
+                            <div style="display:flex; flex-direction:column; gap:0.8rem;">
+                                ${data.history.map(h => `
+                                    <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:0.8rem; border-bottom:1px solid rgba(255,255,255,0.03);">
+                                        <div style="flex:1;">
+                                            <div style="font-size:0.85rem; font-weight:600; color:white; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${h.quiz_title}</div>
+                                            <div style="font-size:0.7rem; color:var(--gray-500);">${new Date(h.updated_at).toLocaleDateString()}</div>
+                                        </div>
+                                        <span style="font-size:0.9rem; font-weight:800; color:var(--primary);">${h.score} pts</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            if (window.lucide) lucide.createIcons();
+        } catch (e) {
+            console.error("Dashboard error:", e);
+        }
+    })();
 }

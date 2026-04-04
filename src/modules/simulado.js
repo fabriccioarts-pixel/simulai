@@ -39,8 +39,9 @@ export async function renderSimulado(container) {
     try {
         const res = await apiFetch(`/api/quiz/start`, {
             method: 'POST',
-            body: JSON.stringify({ quizId })
+            body: JSON.stringify({ quizId, restart: window.isRestarting || false })
         });
+        window.isRestarting = false;
         const json = await res.json();
         
         if (json.error === 'PAYWALL') {
@@ -254,9 +255,10 @@ function finishQuiz(container, data) {
     clearInterval(timerInterval);
     if (window.setQuizMode) window.setQuizMode(false);
 
-    const elapsed = Math.floor((Date.now() - startTime) / 1000);
-    const h = Math.floor(elapsed / 3600);
-    const m = Math.floor((elapsed % 3600) / 60);
+    const elapsed = (startTime && typeof startTime === 'number') ? (Date.now() - startTime) : 0;
+    const totalMinutes = Math.floor(elapsed / 60000);
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
 
     const percentage = data.percentage || 0;
     let classification = '';
@@ -265,31 +267,35 @@ function finishQuiz(container, data) {
     else                       classification = 'Reprovado';
 
     container.innerHTML = `
-        <div class="result-screen" style="animation: fade-in 0.4s ease-out;">
-            <h2>Resultado Final</h2>
-            <div class="result-stats">
-                <div class="stat">
-                    <p>Acertos</p>
-                    <p>${data.score}/${data.total}</p>
+        <div id="results-view" class="result-screen" style="animation: fade-in 0.4s ease-out;">
+            <div class="results-card" style="background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:3.5rem 2rem; text-align:center; box-shadow:0 15px 40px rgba(0,0,0,0.5); width:100%; max-width:600px; animation: scale-up 0.4s ease-out;">
+                <h2 style="font-size:2rem; margin-bottom:2.5rem; letter-spacing:-0.02em;">Resultado Final</h2>
+                
+                <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1.5rem; margin-bottom:3rem;">
+                    <div>
+                        <div style="font-size:0.75rem; color:var(--gray-500); text-transform:uppercase; margin-bottom:0.5rem; letter-spacing:0.05em;">Acertos</div>
+                        <div style="font-size:2.2rem; font-weight:900; color:white;">${data.score}/${data.total}</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.75rem; color:var(--gray-500); text-transform:uppercase; margin-bottom:0.5rem; letter-spacing:0.05em;">Percentual</div>
+                        <div style="font-size:2.2rem; font-weight:900; color:white;">${percentage}%</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.75rem; color:var(--gray-500); text-transform:uppercase; margin-bottom:0.5rem; letter-spacing:0.05em;">Tempo na Sessão</div>
+                        <div style="font-size:1.8rem; font-weight:900; color:white;">${h}h ${m}m</div>
+                    </div>
                 </div>
-                <div class="stat">
-                    <p>Percentual</p>
-                    <p>${percentage}%</p>
+                <div class="result-classification">${classification}</div>
+                <div style="display:flex; gap:1rem; justify-content:center; margin-top:2rem;">
+                    <button id="retest-btn" class="btn-minimal" style="border:1px solid var(--border);"><i data-lucide="refresh-cw"></i> Refazer Simulado</button>
+                    <button id="restart-btn" class="btn-primary">Voltar Início</button>
                 </div>
-                <div class="stat">
-                    <p>Tempo na Sessão</p>
-                    <p>${h}h ${m}m</p>
-                </div>
-            </div>
-            <div class="result-classification">${classification}</div>
-            <div style="display:flex; gap:1rem; justify-content:center; margin-top:2rem;">
-                <button id="retest-btn" class="btn-minimal" style="border:1px solid var(--border);"><i data-lucide="refresh-cw"></i> Refazer Simulado</button>
-                <button id="restart-btn" class="btn-primary">Voltar Início</button>
             </div>
         </div>
     `;
 
     document.getElementById('retest-btn').addEventListener('click', () => {
+        window.isRestarting = true;
         renderSimulado(container);
     });
 
