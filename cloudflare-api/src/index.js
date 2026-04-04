@@ -706,7 +706,7 @@ app.get('/api/admin/migrate/fix-db', adminOnly, async (c) => {
 app.get('/api/admin/quizzes', adminOnly, async (c) => {
   try {
     const { results } = await c.env.meu_simulado_db.prepare(
-      "SELECT q.*, (SELECT COUNT(*) FROM Questions WHERE quiz_id = q.id) as question_count FROM Quizzes q ORDER BY q.created_at DESC"
+      "SELECT q.*, (SELECT COUNT(*) FROM Questions WHERE quiz_id = q.id) as question_count FROM Quizzes q"
     ).all();
     return c.json({ success: true, quizzes: results });
   } catch (e) {
@@ -716,13 +716,13 @@ app.get('/api/admin/quizzes', adminOnly, async (c) => {
 
 app.post('/api/admin/quizzes', adminOnly, async (c) => {
   try {
-    const { title, description, subject, is_premium, difficulty } = await c.req.json();
+    const { title, subject, is_premium, difficulty } = await c.req.json();
     if (!title) return c.json({ success: false, error: 'Título é obrigatório' }, 400);
     
     const id = nanoid();
     await c.env.meu_simulado_db.prepare(
-      "INSERT INTO Quizzes (id, title, description, subject, is_premium, difficulty, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)"
-    ).bind(id, title, description || '', subject || 'Geral', is_premium ? 1 : 0, difficulty || 'medium').run();
+      "INSERT INTO Quizzes (id, title, subject, is_premium, difficulty) VALUES (?, ?, ?, ?, ?)"
+    ).bind(id, title, subject || 'Geral', is_premium ? 1 : 0, difficulty || 'medium').run();
     return c.json({ success: true, id });
   } catch (e) {
     return c.json({ success: false, error: e.message }, 500);
@@ -733,10 +733,10 @@ app.post('/api/admin/quizzes', adminOnly, async (c) => {
 app.put('/api/admin/quizzes/:id', adminOnly, async (c) => {
   try {
     const id = c.req.param('id');
-    const { title, description, subject, is_premium, difficulty, is_active } = await c.req.json();
+    const { title, subject, is_premium, difficulty } = await c.req.json();
     await c.env.meu_simulado_db.prepare(
-      "UPDATE Quizzes SET title = ?, description = ?, subject = ?, is_premium = ?, difficulty = ?, is_active = ? WHERE id = ?"
-    ).bind(title, description || '', subject || '', is_premium ? 1 : 0, difficulty || 'medium', is_active ? 1 : 0, id).run();
+      "UPDATE Quizzes SET title = ?, subject = ?, is_premium = ?, difficulty = ? WHERE id = ?"
+    ).bind(title, subject || '', is_premium ? 1 : 0, difficulty || 'medium', id).run();
     return c.json({ success: true });
   } catch (e) {
     return c.json({ success: false, error: e.message }, 500);
