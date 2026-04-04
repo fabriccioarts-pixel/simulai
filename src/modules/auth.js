@@ -1,8 +1,7 @@
-const SUPABASE_URL = "https://unhnnuvubhlobctdjjlf.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuaG5udXZ1Ymhsb2JjdGRqamxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNjY5NzEsImV4cCI6MjA5MDY0Mjk3MX0.3ZMQX6lLmEr67C_s9JmiYzN2rSh24aHSPsBr8H4E7U0";
+import { apiFetch, getSupabaseClient } from '../config.js';
 
-// Inicializa o cliente se disponível globalmente
-const supabase = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+// Usa o cliente singleton do config.js
+// const supabase = getSupabaseClient(); // Usado sob demanda nos métodos para evitar conflitos de carregamento
 
 let cachedUser = null;
 let cachedPermissions = null;
@@ -10,6 +9,8 @@ let cachedPermissions = null;
 export const auth = {
     async getUser() {
         if (cachedUser) return cachedUser;
+        const supabase = getSupabaseClient();
+        if (!supabase) return null;
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return null;
         cachedUser = {
@@ -22,13 +23,35 @@ export const auth = {
         return cachedUser;
     },
     async logout() {
-        await supabase.auth.signOut();
-        cachedUser = null;
-        cachedPermissions = null;
-        window.location.reload();
+        console.log("Iniciando logout agressivo...");
+        try {
+            const supabase = getSupabaseClient();
+            if (supabase) {
+                // Tenta o logout oficial
+                await supabase.auth.signOut();
+            }
+        } catch (e) {
+            console.error("Erro no signOut oficial:", e);
+        } finally {
+            // LIMPEZA DE FORÇA BRUTA
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            // Remove cookies relacionados ao Supabase (se houver)
+            document.cookie.split(";").forEach(c => {
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+            });
+
+            console.log("Memória limpa. Redirecionando...");
+            
+            // Redirecionamento limpo para a home
+            window.location.href = window.location.origin + '/';
+        }
     },
     async isLoggedIn() {
         if (cachedUser) return true;
+        const supabase = getSupabaseClient();
+        if (!supabase) return false;
         const { data: { session } } = await supabase.auth.getSession();
         return !!session;
     },
@@ -37,9 +60,8 @@ export const auth = {
         const user = await this.getUser();
         if (!user) return [];
         try {
-            const res = await fetch(`https://simulado-api.simulado-ata-mf.workers.dev/auth/permissions`, {
+            const res = await apiFetch(`/auth/permissions`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ userId: user.id })
             });
             const data = await res.json();
@@ -122,6 +144,12 @@ export function renderLogin(container, navigateFn) {
             btn.disabled = true;
             btn.innerText = "Enviando...";
 
+            const supabase = getSupabaseClient();
+            if (!supabase) {
+                window.showAlert("Erro", "O cliente Supabase não pôde ser inicializado.", "error");
+                return;
+            }
+
             const { error } = await supabase.auth.resetPasswordForEmail(email, {
                 redirectTo: `${window.location.origin}/?view=account`
             });
@@ -151,10 +179,18 @@ export function renderLogin(container, navigateFn) {
         submitBtn.disabled = true;
         submitBtn.innerText = "Verificando...";
 
+        const supabase = getSupabaseClient();
+        if (!supabase) {
+            window.showAlert("Erro Sitema", "O cliente Supabase não foi inicializado.", "error");
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Entrar na Plataforma";
+            return;
+        }
+
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         
         if (error) {
-            alert("Erro ao logar: " + error.message);
+            window.showAlert("Falha no Login", error.message, "error");
             submitBtn.disabled = false;
             submitBtn.innerText = "Entrar no Simulai";
         } else {
@@ -210,13 +246,21 @@ export function renderRegister(container, navigateFn) {
         const confirm = document.getElementById('reg-confirm').value;
 
         if (password !== confirm) {
-            alert("As senhas não coincidem!");
+            window.showAlert("Senhas Diferentes", "As senhas digitadas não coincidem. Tente novamente.", "warning");
             return;
         }
 
         const submitBtn = e.target.querySelector('button');
         submitBtn.disabled = true;
         submitBtn.innerText = "Processando...";
+
+        const supabase = getSupabaseClient();
+        if (!supabase) {
+            window.showAlert("Erro", "Erro de inicialização do Supabase.", "error");
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Cadastrar e Verificar E-mail";
+            return;
+        }
 
         const { data, error } = await supabase.auth.signUp({
             email,
@@ -229,11 +273,11 @@ export function renderRegister(container, navigateFn) {
         });
 
         if (error) {
-            alert("Erro ao cadastrar: " + error.message);
+            window.showAlert("Erro de Cadastro", error.message, "error");
             submitBtn.disabled = false;
             submitBtn.innerText = "Cadastrar e Verificar E-mail";
         } else {
-            alert("Excelente! Verifique seu e-mail agora. Acabamos de enviar um link de ativação para você.");
+            window.showAlert("Quase lá!", "Excelente! Verifique seu e-mail agora. Acabamos de enviar um link de ativação para você.", "success");
             renderLogin(container, navigateFn);
         }
     };
@@ -250,7 +294,7 @@ export async function renderAccount(container) {
                     <h2 style="font-size:2rem; margin-bottom:0.5rem;">Minha Conta</h2>
                     <p style="color:var(--gray-400);">Área de segurança e dados pessoais do seu perfil.</p>
                 </div>
-                <button id="logout-btn" class="btn-secondary" style="color:var(--danger); border-color:var(--danger); white-space:nowrap;"><i data-lucide="log-out"></i> Sair do Simulai</button>
+                <button onclick="window.simulaiLogout()" class="btn-secondary" style="color:var(--danger); border-color:var(--danger); white-space:nowrap;"><i data-lucide="log-out"></i> Sair do Simulai</button>
             </div>
 
             <div class="account-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:1.5rem;">
@@ -286,14 +330,19 @@ export async function renderAccount(container) {
 
                 <div class="account-card" style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:2rem; grid-column: 1 / -1; border-top: 2px solid #ef4444;">
                     <h3 style="font-size:1.1rem; margin-bottom:1.5rem; display:flex; align-items:center; gap:0.5rem;"><i data-lucide="crown" style="color:#ef4444;"></i> Simulai Premium</h3>
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.5rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1.5rem;">
                         <div style="flex:1; min-width:280px;">
-                            <p style="color:var(--gray-300); font-size:0.95rem; margin-bottom:0.5rem;">Tenha acesso ilimitado a todos os simulados, calendários e materiais de elite.</p>
-                            <span style="font-size:0.75rem; color:var(--gray-500); text-transform:uppercase;">Plano Vitalício de Aprovação</span>
+                            <p style="color:var(--gray-300); font-size:0.95rem; margin-bottom:0.5rem;">Tenha acesso ilimitado a todos os simulados, explicações e catálogo de questões atualizado.</p>
+                            <span style="font-size:0.75rem; color:var(--gray-500); text-transform:uppercase;">Escolha o Plano Ideal</span>
                         </div>
-                        <button id="stripe-checkout-btn" class="btn-primary" style="background:#ef4444; border:none; padding:1rem 2rem; font-weight:700;">
-                            <i data-lucide="zap"></i> Liberação Total
-                        </button>
+                        <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+                            <button class="stripe-checkout-btn btn-primary" data-price="price_1QwXXX_MONTHLY" style="background:var(--gray-800); border:1px solid var(--border); border-radius:8px; padding:0.8rem 1.5rem; font-weight:700;">
+                                Mensal <br><span style="font-size:0.8rem; font-weight:normal; opacity:0.8;">R$ 37 /mês</span>
+                            </button>
+                            <button class="stripe-checkout-btn btn-primary" data-price="price_1QwXXX_ANNUAL" style="background:#ef4444; border:none; padding:0.8rem 1.5rem; border-radius:8px; font-weight:700;">
+                                <i data-lucide="zap" style="margin-right:0.5rem;"></i> Anual <br><span style="font-size:0.8rem; font-weight:normal; opacity:0.8;">R$ 370 (2 meses grátis)</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -310,16 +359,19 @@ export async function renderAccount(container) {
         submitBtn.disabled = true;
         submitBtn.innerText = "Sincronizando...";
 
+        const supabase = getSupabaseClient();
+        if (!supabase) return;
+
         const { error } = await supabase.auth.updateUser({
             data: { full_name: newName }
         });
 
         if (error) {
-            alert("Erro ao atualizar nome: " + error.message);
+            window.showAlert("Erro", "Erro ao atualizar nome: " + error.message, "error");
             submitBtn.disabled = false;
             submitBtn.innerText = "Salvar Novo Nome";
         } else {
-            alert("Excelente! Nome atualizado com sucesso.");
+            window.showAlert("Sucesso", "Excelente! Nome atualizado com sucesso.", "success");
             window.location.reload();
         }
     };
@@ -338,6 +390,9 @@ export async function renderAccount(container) {
         submitBtn.disabled = true;
         submitBtn.innerText = "Atualizando senha...";
 
+        const supabase = getSupabaseClient();
+        if (!supabase) return;
+
         const { error } = await supabase.auth.updateUser({
             password: newPassword
         });
@@ -354,23 +409,25 @@ export async function renderAccount(container) {
         }
     };
 
-    // BOTÃO DE PAGAMENTO (STRIPE)
-    const checkoutBtn = document.getElementById('stripe-checkout-btn');
-    if (checkoutBtn) {
-        checkoutBtn.onclick = async () => {
+    // BOTÃO DE PAGAMENTO (STRIPE) MULTI
+    container.querySelectorAll('.stripe-checkout-btn').forEach(checkoutBtn => {
+        checkoutBtn.addEventListener('click', async () => {
             const user = await auth.getUser();
             if (!user) return;
             
+            const originalHtml = checkoutBtn.innerHTML;
+            const targetColor = checkoutBtn.style.background;
             checkoutBtn.disabled = true;
-            checkoutBtn.innerText = "Preparando acesso...";
+            checkoutBtn.innerHTML = "Preparando acesso...";
+            checkoutBtn.style.background = "var(--gray-700)";
             
             try {
-                const response = await fetch(`https://simulado-api.simulado-ata-mf.workers.dev/payment/create-checkout-session`, {
+                const response = await apiFetch(`/payment/create-checkout-session`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ 
                         userId: user.id, 
                         email: user.email,
+                        priceId: checkoutBtn.dataset.price,
                         origin: window.location.origin 
                     })
                 });
@@ -382,19 +439,17 @@ export async function renderAccount(container) {
                     const errorMsg = session.error?.message || session.error || "Erro desconhecido";
                     window.showAlert("Falha no Pagamento", errorMsg, "error");
                     checkoutBtn.disabled = false;
-                    checkoutBtn.innerText = "Liberação Total";
+                    checkoutBtn.innerHTML = originalHtml;
+                    checkoutBtn.style.background = targetColor;
                 }
             } catch (err) {
                 window.showAlert("Erro de Conexão", "Não conseguimos conectar com o servidor do Stripe.", "error");
                 checkoutBtn.disabled = false;
-                checkoutBtn.innerText = "Liberação Total";
+                checkoutBtn.innerHTML = originalHtml;
+                checkoutBtn.style.background = targetColor;
             }
-        };
-    }
+        });
+    });
 
-    document.getElementById('logout-btn').onclick = async () => {
-        if(confirm('Deseja realmente sair?')) {
-            await auth.logout();
-        }
-    };
+    // Removido listener manual de logout para usar atributo onclick direto no HTML
 }

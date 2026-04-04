@@ -102,8 +102,9 @@ header {
 
 .header-actions {
     display: flex;
-    align-items: center;
-    gap: 2rem;
+    align-items: center !important; /* Garante que Busca e Avatar fiquem na mesma linha */
+    justify-content: flex-end;
+    gap: 0.75rem;
 }
 
 .logo {
@@ -135,17 +136,17 @@ header {
 }
 
 .nav-btn {
-    padding: 0.5rem 0.75rem;
+    padding: 0.5rem 1rem;
     border: none;
     background: transparent;
     color: var(--gray-400);
-    font-size: 0.9rem;
-    font-weight: 500;
+    font-size: 0.85rem;
+    font-weight: 600;
     cursor: pointer;
     transition: var(--transition);
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.6rem; /* Mais espaço entre ícone e texto */
 }
 
 .nav-btn i {
@@ -364,6 +365,120 @@ header {
 }
 
 /* =============================================
+   NETFLIX FEED STYLING
+   ============================================= */
+
+.netflix-section {
+    margin-bottom: 3rem;
+}
+
+.netflix-row-title {
+    font-size: 1.2rem;
+    color: var(--gray-100);
+    margin-bottom: 1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.netflix-row {
+    display: flex;
+    overflow-x: auto;
+    gap: 1.25rem;
+    padding: 1rem 0 2rem 0;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;  /* IE and Edge */
+    scroll-behavior: smooth;
+}
+
+.netflix-row::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+.netflix-poster {
+    flex: 0 0 220px;
+    background: var(--gray-800);
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+    border: 1px solid var(--border);
+    position: relative;
+    scroll-snap-align: start;
+}
+
+.netflix-poster:hover {
+    transform: scale(1.08);
+    z-index: 10;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    border-color: var(--gray-400);
+}
+
+.netflix-poster-thumb {
+    height: 140px;
+    width: 100%;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.netflix-poster-thumb::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+}
+
+.netflix-poster-info {
+    padding: 1rem;
+}
+
+.netflix-poster-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--gray-100);
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.netflix-poster-meta {
+    font-size: 0.75rem;
+    color: var(--gray-400);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.netflix-badge-premium {
+    background: #ef4444;
+    color: white;
+    font-size: 0.6rem;
+    font-weight: 800;
+    padding: 2px 5px;
+    border-radius: 2px;
+    text-transform: uppercase;
+}
+
+.netflix-badge-free {
+    background: #10b981;
+    color: white;
+    font-size: 0.6rem;
+    font-weight: 800;
+    padding: 2px 5px;
+    border-radius: 2px;
+    text-transform: uppercase;
+}
+
+/* =============================================
    MODAL
    ============================================= */
 
@@ -409,11 +524,86 @@ header {
     background: var(--gray-700);
 }
 
-/* Modal content sections */
-.content-header {
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 1.25rem;
-    margin-bottom: 2rem;
+/* =============================================
+   EXPANDABLE SEARCH BAR (NETFLIX STYLE)
+   ============================================= */
+
+.search-container {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    background: transparent; /* Remove o fundo cinza */
+    border: none; /* Remove a borda */
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+    width: 40px;
+    height: 40px;
+    z-index: 1001;
+}
+
+.search-container i {
+    width: 20px;
+    height: 20px;
+    color: var(--gray-200);
+}
+
+.search-container.expanded {
+    display: flex !important; 
+    justify-content: flex-start;
+    padding-left: 12px;
+    background: rgba(0, 0, 0, 0.95);
+    border: 1px solid var(--gray-700); /* Aparece ao expandir */
+    border-radius: 50px;
+    width: 280px;
+}
+
+#global-search-input {
+    background: transparent;
+    border: none;
+    color: white;
+    padding: 0.5rem;
+    font-size: 0.85rem;
+    outline: none;
+    width: 0;
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+.search-container.expanded #global-search-input {
+    width: 180px;
+    opacity: 1;
+    pointer-events: all;
+    margin-left: 0.5rem;
+}
+
+.search-container i {
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: color 0.2s;
+}
+
+.search-container.expanded i {
+    color: var(--gray-300);
+}
+
+/* MOBILE ADAPTATION */
+@media (max-width: 600px) {
+    .search-container.expanded {
+        position: absolute;
+        right: 1rem;
+        left: 1rem;
+        background: var(--gray-900);
+        z-index: 200;
+        width: calc(100% - 2rem);
+    }
+    
+    .search-container.expanded #global-search-input {
+        flex-grow: 1;
+        width: 100%;
+    }
 }
 
 .content-header h2 {
@@ -816,6 +1006,45 @@ header {
 
 .fade-in {
     animation: fade-in 0.4s ease-out forwards;
+}
+
+/* SKELETONS */
+.skeleton {
+    background: linear-gradient(90deg, var(--gray-800) 25%, var(--gray-700) 50%, var(--gray-800) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s infinite;
+}
+
+.skeleton-text {
+    height: 12px;
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
+    width: 60%;
+    background: var(--gray-700);
+}
+
+@keyframes skeleton-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* QUIZ TRANSITIONS */
+.slide-in-right {
+    animation: slide-in-right 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes slide-in-right {
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.slide-out-left {
+    animation: slide-out-left 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes slide-out-left {
+    from { opacity: 1; transform: translateX(0); }
+    to { opacity: 0; transform: translateX(-30px); }
 }
 
 /* =============================================

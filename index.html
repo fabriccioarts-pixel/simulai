@@ -28,6 +28,10 @@
                     </div>
                 </div>
                 <div class="header-actions">
+                    <div id="header-search" class="search-container">
+                        <i data-lucide="search"></i>
+                        <input type="text" id="global-search-input" placeholder="Títulos, matérias...">
+                    </div>
                     <nav id="main-nav" class="main-nav">
                         <!-- Navigation buttons -->
                     </nav>
@@ -60,7 +64,14 @@
         </div>
     </div>
 
-    <script type="module" src="/main.js"></script>
+    <script>
+        window.onerror = function(msg, url, line) {
+            console.error("HTML DIALNOSTIC:", msg, "at", url, ":", line);
+            var main = document.getElementById('main-content');
+            if(main) main.innerHTML = '<div style="padding:2rem; background:red; color:white;">ERRO FATAL: '+msg+'</div>';
+        }
+    </script>
+    <script type="module" src="/src/main.js"></script>
     <script>
         // Initialize Lucide icons after DOM is ready
         document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
