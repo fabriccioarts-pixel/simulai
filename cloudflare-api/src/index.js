@@ -378,8 +378,8 @@ app.get('/api/quizzes', async (c) => {
     ).bind(userId, today).first();
     const freeUsed = usage?.free_questions_used || 0;
 
-    // Cursor pagination (Mostra ativos ou legados sem o campo preenchido)
-    let query = "SELECT * FROM Quizzes WHERE (is_active = 1 OR is_active IS NULL)";
+    // Cursor pagination (Mostra todos os simulados cadastrados)
+    let query = "SELECT * FROM Quizzes WHERE 1=1";
     const binds = [];
     if (cursor) {
       query += " AND rowid < (SELECT rowid FROM Quizzes WHERE id = ?)";
@@ -714,10 +714,10 @@ app.get('/api/admin/migrate/fix-db', adminOnly, async (c) => {
     if (!hasCol(quizCols.results, 'image_url')) await db.prepare("ALTER TABLE Quizzes ADD COLUMN image_url TEXT").run();
     if (!hasCol(quizCols.results, 'attachments')) await db.prepare("ALTER TABLE Quizzes ADD COLUMN attachments TEXT").run();
     
-    // Garante que TODOS os simulados existentes fiquem visíveis na Home
-    await db.prepare("UPDATE Quizzes SET is_active = 1 WHERE is_active IS NULL OR is_active = 0").run();
+    // Força ativação de ABSOLUTAMENTE TODOS os simulados
+    await db.prepare("UPDATE Quizzes SET is_active = 1").run();
 
-    return c.json({ success: true, message: "Banco de dados sincronizado e todos os simulados ativados!" });
+    return c.json({ success: true, message: "Banco de dados limpo e todos os simulados agora estão visíveis!" });
   } catch (e) {
     return c.json({ success: false, error: e.message }, 500);
   }
