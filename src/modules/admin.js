@@ -88,102 +88,137 @@ export async function renderAdmin(container) {
             </div>
 
             <!-- MODALS -->
-            <div id="new-quiz-modal" class="modal-overlay hidden">
-                <div class="modal-content" style="max-width:450px;">
-                    <h3 style="margin-bottom:1.5rem;">Novo Simulado</h3>
-                    <label class="label-admin">Nome do Simulado</label>
-                    <input type="text" id="nq-title" class="input-dark" placeholder="Ex: Simulado ATA #01" style="margin-bottom:1rem;">
-                    <label class="label-admin">Disciplina/Matéria Principal</label>
-                    <input type="text" id="nq-subject" class="input-dark" placeholder="Ex: Direito Administrativo" style="margin-bottom:1rem;">
-                    <label class="label-admin">Dificuldade</label>
-                    <select id="nq-difficulty" class="input-dark" style="margin-bottom:1rem;">
-                        <option value="easy">Fácil</option>
-                        <option value="medium" selected>Média</option>
-                        <option value="hard">Difícil</option>
-                    </select>
-                    <div style="margin-top:0.5rem;">
-                        <label style="display:flex; align-items:center; gap:0.5rem; color:var(--gray-200); cursor:pointer; font-size:0.9rem;">
-                            <input type="checkbox" id="nq-premium"> Exclusivo para Assinantes (Premium)
-                        </label>
+            <div id="quiz-modal" class="modal-overlay hidden">
+                <div class="modal-content">
+                    <button class="close-btn" onclick="document.getElementById('quiz-modal').classList.add('hidden')"><i data-lucide="x"></i></button>
+                    <div class="modal-header">
+                        <h3 id="quiz-modal-title">Novo Simulado</h3>
                     </div>
-                    <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:2.5rem;">
-                        <button id="nq-cancel" class="btn-minimal">Cancelar</button>
-                        <button id="nq-save" class="btn-primary">Criar Simulado</button>
+                    <div class="modal-body">
+                        <input type="hidden" id="edit-quiz-id">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.2rem;">
+                            <div style="grid-column:1/-1;">
+                                <label class="label-admin">Nome do Simulado</label>
+                                <input type="text" id="nq-title" class="input-dark" placeholder="Ex: Simulado ATA #01">
+                            </div>
+                            <div style="grid-column:1/-1;">
+                                <label class="label-admin">Descrição Breve</label>
+                                <textarea id="nq-desc" class="input-dark" rows="3" placeholder="Do que se trata este simulado?"></textarea>
+                            </div>
+                            <div>
+                                <label class="label-admin">Disciplina/Matéria</label>
+                                <input type="text" id="nq-subject" class="input-dark" placeholder="Ex: Direito Administrativo">
+                            </div>
+                            <div>
+                                <label class="label-admin">Dificuldade</label>
+                                <select id="nq-difficulty" class="input-dark">
+                                    <option value="easy">Fácil</option>
+                                    <option value="medium" selected>Média</option>
+                                    <option value="hard">Difícil</option>
+                                </select>
+                            </div>
+                            <div style="grid-column:1/-1;">
+                                <label class="label-admin">URL da Capa (Imagem)</label>
+                                <input type="text" id="nq-image" class="input-dark" placeholder="https://exemplo.com/imagem.jpg">
+                            </div>
+                            <div style="grid-column:1/-1;">
+                                <label class="label-admin">Anexos/Download (Links separados por vírgula)</label>
+                                <input type="text" id="nq-attachments" class="input-dark" placeholder="https://link1.pdf, https://link2.zip">
+                            </div>
+                        </div>
+                        <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid rgba(255,255,255,0.05);">
+                            <label style="display:flex; align-items:center; gap:0.8rem; color:var(--gray-200); cursor:pointer; font-size:0.95rem;">
+                                <input type="checkbox" id="nq-premium" style="width:18px; height:18px; border-radius:4px;"> Exclusivo para Assinantes (Premium)
+                            </label>
+                        </div>
+                        <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:3rem;">
+                            <button id="nq-cancel" class="btn-secondary">Cancelar</button>
+                            <button id="nq-save" class="btn-primary" style="padding-left:2.5rem; padding-right:2.5rem;">Salvar Simulado</button>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div id="new-question-modal" class="modal-overlay hidden">
-                <div class="modal-content" style="max-width:700px; max-height:90vh; overflow-y:auto;">
-                    <h3 id="question-modal-title" style="margin-bottom:1.5rem;">Adicionar Questão</h3>
-                    <input type="hidden" id="edit-q-id">
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;">
-                        <div style="grid-column: 1/-1;">
-                            <label class="label-admin">Enunciado da Questão</label>
-                            <textarea id="nq-text" class="input-dark" rows="4" placeholder="Escreva o enunciado aqui..."></textarea>
-                        </div>
-                        <div>
-                            <label class="label-admin">Opção A</label>
-                            <input type="text" id="nq-a" class="input-dark" placeholder="Texto da opção A">
-                        </div>
-                        <div>
-                            <label class="label-admin">Opção B</label>
-                            <input type="text" id="nq-b" class="input-dark" placeholder="Texto da opção B">
-                        </div>
-                        <div>
-                            <label class="label-admin">Opção C</label>
-                            <input type="text" id="nq-c" class="input-dark" placeholder="Texto da opção C">
-                        </div>
-                        <div>
-                            <label class="label-admin">Opção D</label>
-                            <input type="text" id="nq-d" class="input-dark" placeholder="Texto da opção D">
-                        </div>
-                        <div>
-                            <label class="label-admin">Resposta Correta</label>
-                            <select id="nq-correct" class="input-dark">
-                                <option value="A">Opção A</option>
-                                <option value="B">Opção B</option>
-                                <option value="C">Opção C</option>
-                                <option value="D">Opção D</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="label-admin">Disciplina</label>
-                            <input type="text" id="nq-discipline" class="input-dark" placeholder="Ex: Direito Constitucional">
-                        </div>
-                        <div style="grid-column: 1/-1;">
-                            <label class="label-admin">Explicação Detalhada</label>
-                            <textarea id="nq-explanation" class="input-dark" rows="3" placeholder="Explique por que esta é a resposta correta..."></textarea>
-                        </div>
+                <div class="modal-content" style="max-width:800px;">
+                    <button class="close-btn" onclick="document.getElementById('new-question-modal').classList.add('hidden')"><i data-lucide="x"></i></button>
+                    <div class="modal-header">
+                        <h3 id="question-modal-title">Adicionar Questão</h3>
                     </div>
-                    <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:2.5rem;">
-                        <button id="nq-cancel-manual" class="btn-minimal">Cancelar</button>
-                        <button id="nq-save-manual" class="btn-primary">Salvar Questão</button>
+                    <div class="modal-body">
+                        <input type="hidden" id="edit-q-id">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;">
+                            <div style="grid-column: 1/-1;">
+                                <label class="label-admin">Enunciado da Questão</label>
+                                <textarea id="nq-text" class="input-dark" rows="5" placeholder="Escreva o enunciado aqui..."></textarea>
+                            </div>
+                            <div>
+                                <label class="label-admin">Opção A</label>
+                                <input type="text" id="nq-a" class="input-dark" placeholder="Texto da opção A">
+                            </div>
+                            <div>
+                                <label class="label-admin">Opção B</label>
+                                <input type="text" id="nq-b" class="input-dark" placeholder="Texto da opção B">
+                            </div>
+                            <div>
+                                <label class="label-admin">Opção C</label>
+                                <input type="text" id="nq-c" class="input-dark" placeholder="Texto da opção C">
+                            </div>
+                            <div>
+                                <label class="label-admin">Opção D</label>
+                                <input type="text" id="nq-d" class="input-dark" placeholder="Texto da opção D">
+                            </div>
+                            <div>
+                                <label class="label-admin">Resposta Correta</label>
+                                <select id="nq-correct" class="input-dark">
+                                    <option value="A">Opção A</option>
+                                    <option value="B">Opção B</option>
+                                    <option value="C">Opção C</option>
+                                    <option value="D">Opção D</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="label-admin">Disciplina</label>
+                                <input type="text" id="nq-discipline" class="input-dark" placeholder="Ex: Direito Constitucional">
+                            </div>
+                            <div style="grid-column: 1/-1;">
+                                <label class="label-admin">Explicação Detalhada (Markdown)</label>
+                                <textarea id="nq-explanation" class="input-dark" rows="4" placeholder="Explique por que esta é a resposta correta..."></textarea>
+                            </div>
+                        </div>
+                        <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:3rem;">
+                            <button id="nq-cancel-manual" class="btn-secondary">Cancelar</button>
+                            <button id="nq-save-manual" class="btn-primary" style="padding-left:2.5rem; padding-right:2.5rem;">Salvar Questão</button>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div id="csv-modal" class="modal-overlay hidden">
                 <div class="modal-content" style="max-width:600px;">
-                    <h3 style="margin-bottom:1rem;">Importar Questões (CSV)</h3>
-                    <p style="color:var(--gray-400); font-size:0.8rem; margin-bottom:1rem;">Campos: question, a, b, c, d, correta(1-4), explicacao, disciplina</p>
-                    <textarea id="csv-area" rows="8" class="input-dark" style="font-family:monospace; font-size:0.8rem;" placeholder="Constitucional, 'Qual a...', 'Art 1', 'Art 2', 'Art 3', 'Art 4', 1, 'Explicação...'"></textarea>
-                    <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:1.5rem;">
-                        <button id="csv-cancel" class="btn-minimal">Cancelar</button>
-                        <button id="csv-do-import" class="btn-primary">Importar Tudo</button>
+                    <button class="close-btn" onclick="document.getElementById('csv-modal').classList.add('hidden')"><i data-lucide="x"></i></button>
+                    <div class="modal-header">
+                        <h3>Importar Questões (CSV)</h3>
+                    </div>
+                    <div class="modal-body">
+                        <p style="color:var(--gray-400); font-size:0.85rem; margin-bottom:1.5rem;">Copie e cole os dados separados por vírgula ou ponto-e-vírgula.<br>Campos: question, a, b, c, d, correta(1-4), explicacao, disciplina</p>
+                        <textarea id="csv-area" rows="10" class="input-dark" style="font-family:'Courier New', monospace; font-size:0.8rem; padding:1.2rem;" placeholder="Constitucional, 'Qual a...', 'Art 1', 'Art 2', 'Art 3', 'Art 4', 1, 'Explicação...'"></textarea>
+                        <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:2.5rem;">
+                            <button id="csv-cancel" class="btn-secondary">Cancelar</button>
+                            <button id="csv-do-import" class="btn-primary" style="padding-left:2.5rem; padding-right:2.5rem;">Importar Tudo</button>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <style>
                 .admin-card { background:#111; border:1px solid var(--border); padding:1.5rem; border-radius:12px; transition: all 0.2s; display:flex; flex-direction:column; }
-                .admin-card:hover { border-color:var(--primary); transform:translateY(-2px); box-shadow:0 10px 30px rgba(0,0,0,0.4); }
+                .admin-card:hover { border-color:var(--gray-400); transform:translateY(-2px); box-shadow:0 10px 30px rgba(0,0,0,0.4); }
                 .nav-btn-admin { padding:0.8rem 1.2rem; background:transparent; border:none; color:var(--gray-400); text-align:left; cursor:pointer; border-radius:8px; display:flex; align-items:center; gap:0.8rem; font-weight:500; transition:0.2s; }
                 .nav-btn-admin.active { background:rgba(255,255,255,0.1); color:white; }
-                .input-dark { width:100%; padding:0.8rem; background:#000; border:1px solid var(--border); color:white; border-radius:6px; margin-top:0.4rem; outline:none; font-size:0.9rem; }
-                .label-admin { color:var(--gray-400); font-size:0.8rem; font-weight:600; display:block; }
-                .modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); display:flex; align-items:center; justify-content:center; z-index:10000; backdrop-filter:blur(4px); }
-                .modal-content { background:#111; border:1px solid var(--border); padding:2rem; border-radius:16px; width:90%; position:relative; }
+                .input-dark { width:100%; padding:0.8rem; background:#000; border:1px solid var(--border); color:white; border-radius:6px; margin-top:0.4rem; outline:none; font-size:0.9rem; transition: border-color 0.2s; }
+                .input-dark:focus { border-color: var(--gray-400); }
+                .label-admin { color:var(--gray-400); font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; display:block; margin-top:1rem; }
                 .stat-box { background:var(--gray-800); border:1px solid var(--border); padding:1.5rem; border-radius:12px; }
                 .stat-box p:first-child { font-size:0.8rem; text-transform:uppercase; color:var(--gray-400); margin-bottom:0.5rem; }
                 .stat-box p:last-child { font-size:2rem; font-weight:800; color:white; }
@@ -244,19 +279,54 @@ export async function renderAdmin(container) {
                         <div class="admin-card">
                             <div style="display:flex; justify-content:space-between; margin-bottom:1rem;">
                                 <span style="font-size:0.7rem; color:var(--primary); font-weight:700; text-transform:uppercase;">ID: ${q.id.split('-')[0]}</span>
-                                ${q.is_premium ? '<i data-lucide="crown" style="width:14px; color:#f59e0b;"></i>' : ''}
+                                <div style="display:flex; gap:0.8rem; align-items:center;">
+                                    ${q.is_premium ? '<i data-lucide="crown" style="width:14px; color:#f59e0b;"></i>' : ''}
+                                    <button class="btn-edit-quiz btn-minimal" data-id="${q.id}" style="font-size:0.75rem; padding:2px 8px; border:1px solid var(--border); border-radius:4px;">
+                                        <i data-lucide="edit-3" style="width:12px; margin-right:4px;"></i> Editar Info
+                                    </button>
+                                </div>
                             </div>
-                            <h3 style="margin-bottom:1rem; font-size:1.1rem; line-height:1.2;">${q.title}</h3>
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto; padding-top:1rem; border-top:1px solid var(--border);">
+                            <h3 style="margin-bottom:1rem; font-size:1.1rem; line-height:1.2; color:white;">${q.title}</h3>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto; padding-top:1rem; border-top:1px solid rgba(255,255,255,0.05);">
                                 <span style="font-size:0.85rem; color:var(--gray-400);">${q.question_count} questões</span>
-                                <button class="btn-manage" data-id="${q.id}">Gerenciar <i data-lucide="settings" style="width:14px;"></i></button>
+                                <button class="btn-manage" data-id="${q.id}" style="background:var(--gray-700); color:white; border:none; padding:0.5rem 1rem; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:0.4rem; font-size:0.85rem; font-weight:600;">
+                                    Gerenciar <i data-lucide="settings" style="width:14px;"></i>
+                                </button>
                             </div>
                         </div>
                     `).join('')}
                 </div>
             `;
             
-            document.getElementById('add-quiz-btn').onclick = () => document.getElementById('new-quiz-modal').classList.remove('hidden');
+            document.getElementById('add-quiz-btn').onclick = () => {
+                document.getElementById('quiz-modal-title').innerText = "Novo Simulado";
+                document.getElementById('edit-quiz-id').value = "";
+                document.getElementById('nq-title').value = "";
+                document.getElementById('nq-desc').value = "";
+                document.getElementById('nq-subject').value = "";
+                document.getElementById('nq-image').value = "";
+                document.getElementById('nq-attachments').value = "";
+                document.getElementById('nq-premium').checked = false;
+                document.getElementById('quiz-modal').classList.remove('hidden');
+            };
+            
+            area.querySelectorAll('.btn-edit-quiz').forEach(btn => {
+                btn.onclick = () => {
+                    const qId = btn.dataset.id;
+                    const q = quizzes.find(item => item.id === qId);
+                    document.getElementById('quiz-modal-title').innerText = "Editar Simulado";
+                    document.getElementById('edit-quiz-id').value = q.id;
+                    document.getElementById('nq-title').value = q.title;
+                    document.getElementById('nq-desc').value = q.description || "";
+                    document.getElementById('nq-subject').value = q.subject || "";
+                    document.getElementById('nq-image').value = q.image_url || "";
+                    document.getElementById('nq-attachments').value = q.attachments || "";
+                    document.getElementById('nq-premium').checked = !!q.is_premium;
+                    document.getElementById('nq-difficulty').value = q.difficulty || "medium";
+                    document.getElementById('quiz-modal').classList.remove('hidden');
+                };
+            });
+
             area.querySelectorAll('.btn-manage').forEach(btn => btn.onclick = () => renderQuestionsManager(btn.dataset.id));
         } 
         
@@ -348,6 +418,7 @@ export async function renderAdmin(container) {
         }
 
         if (window.lucide) lucide.createIcons();
+        setupModals(); // Re-vincula os eventos aos novos elementos do DOM
     };
 
     const renderQuestionsManager = async (quizId) => {
@@ -478,41 +549,50 @@ export async function renderAdmin(container) {
 
     // Shared Modal Listeners (Bind once)
     const setupModals = () => {
-        document.getElementById('nq-cancel').onclick = () => document.getElementById('new-quiz-modal').classList.add('hidden');
+        document.getElementById('nq-cancel').onclick = () => document.getElementById('quiz-modal').classList.add('hidden');
         document.getElementById('nq-cancel-manual').onclick = () => document.getElementById('new-question-modal').classList.add('hidden');
         document.getElementById('csv-cancel').onclick = () => document.getElementById('csv-modal').classList.add('hidden');
 
         document.getElementById('nq-save').onclick = async () => {
             const btn = document.getElementById('nq-save');
+            const editId = document.getElementById('edit-quiz-id').value;
             const title = document.getElementById('nq-title').value;
+            const description = document.getElementById('nq-desc').value;
             const subject = document.getElementById('nq-subject').value;
             const difficulty = document.getElementById('nq-difficulty').value;
+            const image_url = document.getElementById('nq-image').value;
+            const attachments = document.getElementById('nq-attachments').value;
             const isPremium = document.getElementById('nq-premium').checked;
+            
             if (!title) {
                 window.showAlert("Erro", "O título é obrigatório.", "error");
                 return;
             }
             btn.disabled = true;
-            btn.innerText = "Criando...";
+            btn.innerText = "Salvando...";
             try {
-                const res = await apiFetch('/api/admin/quizzes', { 
-                    method: 'POST', 
-                    body: JSON.stringify({ title, subject, difficulty, is_premium: isPremium }) 
+                const method = editId ? 'PUT' : 'POST';
+                const url = editId ? `/api/admin/quizzes/${editId}` : '/api/admin/quizzes';
+                
+                const res = await apiFetch(url, { 
+                    method, 
+                    body: JSON.stringify({ 
+                        title, subject, difficulty, 
+                        description, image_url, attachments,
+                        is_premium: isPremium 
+                    }) 
                 });
                 const json = await res.json();
                 if (res.ok && json.success) {
-                    window.showAlert("Sucesso", "Simulado criado com sucesso!", "success");
-                    document.getElementById('new-quiz-modal').classList.add('hidden');
-                    // Reset inputs
-                    document.getElementById('nq-title').value = '';
-                    document.getElementById('nq-subject').value = '';
+                    window.showAlert("Sucesso", editId ? "Simulado atualizado!" : "Simulado criado!", "success");
+                    document.getElementById('quiz-modal').classList.add('hidden');
                     loadData();
                 } else {
                     window.showAlert("Erro", json.error || "Erro ao salvar simulado.", "error");
                 }
             } catch(e) { window.showAlert("Erro", e.message, "error"); }
             btn.disabled = false;
-            btn.innerText = "Criar Simulado";
+            btn.innerText = "Salvar Simulado";
         };
 
         document.getElementById('nq-save-manual').onclick = async () => {
@@ -584,5 +664,4 @@ export async function renderAdmin(container) {
     };
 
     await loadData();
-    setupModals();
 }

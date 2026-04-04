@@ -139,10 +139,12 @@ function renderQuestionUI(container) {
                 <p id="explanation-text"></p>
             </div>
 
-            <div class="quiz-controls" style="justify-content: flex-end;">
-                <div class="quiz-controls-right">
-                    <button id="check-btn" class="btn-primary" disabled>Ver Resposta</button>
-                    <button id="next-btn" class="btn-accent hidden">Próxima <i data-lucide="arrow-right"></i></button>
+            <div class="quiz-controls" style="display:flex; justify-content:space-between; align-items:center; margin-top:2rem;">
+                <div id="quiz-discrete-controls" class="hidden">
+                    <button id="check-btn" class="btn-minimal" style="opacity:0.6; font-size:0.8rem; height:auto; padding:0.5rem 1rem;"><i data-lucide="eye" style="width:14px;"></i> Ver Gabarito (Opcional)</button>
+                </div>
+                <div class="quiz-controls-right" style="margin-left:auto;">
+                    <button id="next-btn" class="btn-accent" disabled>Próxima <i data-lucide="arrow-right"></i></button>
                 </div>
             </div>
         </div>
@@ -157,23 +159,23 @@ function renderQuestionUI(container) {
 
     optionBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            if (checkBtn.classList.contains('hidden')) return; // Already checked
+            if (nextBtn.dataset.answered === 'true') return;
             optionBtns.forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
             selectedLetter = btn.dataset.letter;
-            checkBtn.disabled = false;
+            nextBtn.disabled = false;
+            document.getElementById('quiz-discrete-controls').classList.remove('hidden');
         });
     });
 
-    checkBtn.addEventListener('click', async () => {
+    const processAnswer = async () => {
+        if (nextBtn.dataset.answered === 'true') return true;
+        
         const payload = {
             sessionId: quizSessionId,
             questionId: currentQ.id,
             selectedLetter
         };
-
-        checkBtn.innerText = "Processando...";
-        checkBtn.disabled = true;
 
         try {
             const res = await apiFetch('/api/quiz/answer', {
@@ -184,39 +186,49 @@ function renderQuestionUI(container) {
 
             if (json.error === 'PAYWALL') {
                 showPaywall(container);
-                return;
+                return false;
             }
 
             if (!json.success) throw new Error(json.error);
-
-            // Highlight Correct / Wrong
-            optionBtns.forEach(btn => {
-                if (btn.dataset.letter === json.correctLetter) btn.classList.add('correct');
-                else if (btn.dataset.letter === selectedLetter) btn.classList.add('wrong');
-                btn.disabled = true;
-            });
-
-            document.getElementById('correct-letter').textContent = json.correctLetter;
-            document.getElementById('explanation-text').innerHTML = renderMarkdown(json.explanation) + (json.pegadinha ? `<br><br><strong>⚠️ Pegadinha:</strong> ${json.pegadinha}` : '');
-            explanationBox.classList.remove('hidden');
-
-            checkBtn.classList.add('hidden');
-            nextBtn.classList.remove('hidden');
 
             // Store state for next render
             currentQIdx = json.currentQuestionIndex;
             currentScore = json.score;
             currentQ = json.nextQuestion;
-
+            
+            // Mark as answered
+            nextBtn.dataset.answered = 'true';
+            nextBtn.dataset.correctLetter = json.correctLetter;
+            nextBtn.dataset.explanation = json.explanation;
+            nextBtn.dataset.pegadinha = json.pegadinha || '';
+            
+            return true;
         } catch(e) {
-            window.showAlert('Erro', 'Houve um problema ao processar sua resposta.', 'error');
-            checkBtn.innerText = "Ver Resposta";
-            checkBtn.disabled = false;
+            window.showAlert('Erro', e.message || 'Houve um problema ao processar sua resposta.', 'error');
+            return false;
         }
+    };
+
+    checkBtn.addEventListener('click', async () => {
+        const ok = await processAnswer();
+        if (!ok) return;
+
+        const correctLetter = nextBtn.dataset.correctLetter;
+        optionBtns.forEach(btn => {
+            if (btn.dataset.letter === correctLetter) btn.classList.add('correct');
+            else if (btn.dataset.letter === selectedLetter) btn.classList.add('wrong');
+            btn.disabled = true;
+        });
+
+        document.getElementById('correct-letter').textContent = correctLetter;
+        document.getElementById('explanation-text').innerHTML = renderMarkdown(nextBtn.dataset.explanation) + (nextBtn.dataset.pegadinha ? `<br><br><strong>⚠️ Pegadinha:</strong> ${nextBtn.dataset.pegadinha}` : '');
+        explanationBox.classList.remove('hidden');
+        checkBtn.classList.add('hidden');
     });
 
-    nextBtn.addEventListener('click', () => {
-        renderQuestionUI(container);
+    nextBtn.addEventListener('click', async () => {
+        const ok = await processAnswer();
+        if (ok) renderQuestionUI(container);
     });
 
     if (window.lucide) lucide.createIcons();
@@ -270,9 +282,16 @@ function finishQuiz(container, data) {
                 </div>
             </div>
             <div class="result-classification">${classification}</div>
-            <button id="restart-btn" class="btn-primary" style="margin-top:1.5rem;">Voltar Início</button>
+            <div style="display:flex; gap:1rem; justify-content:center; margin-top:2rem;">
+                <button id="retest-btn" class="btn-minimal" style="border:1px solid var(--border);"><i data-lucide="refresh-cw"></i> Refazer Simulado</button>
+                <button id="restart-btn" class="btn-primary">Voltar Início</button>
+            </div>
         </div>
     `;
+
+    document.getElementById('retest-btn').addEventListener('click', () => {
+        renderSimulado(container);
+    });
 
     document.getElementById('restart-btn').addEventListener('click', () => {
         window.location.reload();

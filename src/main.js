@@ -135,13 +135,15 @@ window.showAlert = (title, message, type = 'info') => {
     };
 
     body.innerHTML = `
-        <div style="text-align:center; padding:1rem;">
-            <div style="width:60px; height:60px; background:rgba(255,255,255,0.05); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem;">
-                <i data-lucide="${icons[type] || 'info'}" style="color:${colors[type] || 'white'}; width:32px; height:32px;"></i>
+        <div style="text-align:center; padding:1.5rem 0;">
+            <div style="width:70px; height:70px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 2rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.4);">
+                <i data-lucide="${icons[type] || 'info'}" style="color:${colors[type] || 'white'}; width:36px; height:36px;"></i>
             </div>
-            <h3 style="margin-bottom:0.5rem; color:white;">${title}</h3>
-            <p style="color:var(--gray-400); margin-bottom:2rem; font-size:0.95rem;">${message}</p>
-            <button class="btn-primary" style="width:100%; justify-content:center;" onclick="document.getElementById('modal-container').classList.add('hidden')">Entendido</button>
+            <div class="modal-header" style="border:none; padding:0; margin-bottom:1rem;">
+                <h3 style="font-size:1.6rem; color:white;">${title}</h3>
+            </div>
+            <p style="color:var(--gray-400); margin-bottom:3rem; font-size:1rem; line-height:1.6; max-width:400px; margin-left:auto; margin-right:auto;">${message}</p>
+            <button class="btn-primary" style="width:100%; justify-content:center; padding:1rem; font-size:1rem; border-radius:12px;" onclick="document.getElementById('modal-container').classList.add('hidden')">Confirmar</button>
         </div>
     `;
 

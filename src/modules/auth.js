@@ -110,18 +110,22 @@ export function renderLogin(container, navigateFn) {
         modalDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; display:flex; align-items:center; justify-content:center;';
         
         modalDiv.innerHTML = `
-            <div style="background:var(--gray-900); width:90%; max-width:400px; padding:2rem; border-radius:12px; border:1px solid var(--border); box-shadow:0 20px 50px rgba(0,0,0,0.5); animation: fade-in 0.3s ease-out;">
-                <h3 style="font-size:1.15rem; color:var(--gray-100); margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;"><i data-lucide="key" style="color:var(--gray-400);"></i> Recuperar Senha</h3>
-                <p style="font-size:0.85rem; color:var(--gray-400); margin-bottom:1.5rem;">Enviaremos um link oficial de redefinição para o seu e-mail cadastrado.</p>
-                
-                <div style="margin-bottom:1.5rem;">
-                    <label style="display:block; font-size:0.75rem; color:var(--gray-500); margin-bottom:0.5rem; text-transform:uppercase;">E-mail Cadastrado</label>
-                    <input type="email" id="reset-email-input" required style="width:100%; padding:0.8rem; background:var(--gray-950); border:1px solid var(--border); color:white; border-radius:6px; font-size:0.9rem;" placeholder="seu@email.com">
+            <div class="modal-content" style="max-width:400px;">
+                <button class="close-btn" id="close-reset-modal"><i data-lucide="x"></i></button>
+                <div class="modal-header">
+                    <h3 style="display:flex; align-items:center; gap:0.5rem;"><i data-lucide="key" style="color:var(--gray-400);"></i> Recuperar Senha</h3>
                 </div>
-                
-                <div style="display:flex; gap:1rem;">
-                    <button id="close-reset-modal" style="flex:1; padding:0.8rem; background:transparent; border:1px solid var(--border); color:var(--gray-400); border-radius:6px; cursor:pointer; font-weight:600;">Cancelar</button>
-                    <button id="send-reset-link" class="btn-primary" style="flex:2; padding:0.8rem; font-weight:700;">Enviar Link</button>
+                <div class="modal-body">
+                    <p style="color:var(--gray-400); margin-bottom:2rem; font-size:0.9rem;">Enviaremos um link oficial de redefinição para o seu e-mail cadastrado.</p>
+                    
+                    <div style="margin-bottom:1.5rem;">
+                        <label class="label-admin" style="margin-top:0;">E-mail Cadastrado</label>
+                        <input type="email" id="reset-email-input" class="input-dark" style="margin-top:0.5rem;" placeholder="seu@email.com">
+                    </div>
+                    
+                    <div style="display:flex; gap:1rem; margin-top:2.5rem;">
+                        <button id="send-reset-link" class="btn-primary" style="width:100%; justify-content:center; padding:1rem;">Enviar Link Oficial</button>
+                    </div>
                 </div>
             </div>
         `;
