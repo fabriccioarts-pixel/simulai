@@ -1,45 +1,78 @@
-import { hubData } from '../data/hubData.js';
+import { apiFetch } from '../config.js';
 
-let currentQuestionIndex = 0;
-let userAnswers = [];
+let quizSessionId = null;
+let currentQIdx = 0;
+let totalQs = 0;
+let currentScore = 0;
+let currentQ = null;
 let timerInterval;
 let startTime;
 
 export async function renderSimulado(container) {
+    container.innerHTML = ''; // Remove o loader que o main.js coloca antes de chamar esta função
     const quizContent = document.createElement('div');
     quizContent.className = 'quiz-container';
     container.appendChild(quizContent);
 
-    // Sync database count only if not already loaded to speed up rendering
-    if (!hubData.quiz || hubData.quiz.length === 0) {
-        // Initial loading state only shown when fetching
-        quizContent.innerHTML = '<div class="loader">Sincronizando Banco de Dados...</div>';
+    let state = window.history.state || {};
+    let params = new URLSearchParams(window.location.search);
+    let quizId = state.quizId || params.get('quizId');
+
+    quizContent.innerHTML = '<div class="loader">Carregando Simulado...</div>';
+
+    if (!quizId) {
         try {
-            const res = await fetch(`https://simulado-api.simulado-ata-mf.workers.dev/questoes`);
-            const json = await res.json();
-            if (json.success && json.data) {
-                hubData.quiz = json.data.map(q => ({
-                    id: parseInt(q.original_id) || q.id,
-                    disciplina: q.discipline,
-                    enunciado: q.question,
-                    alternativas: JSON.parse(q.options),
-                    explicacao: q.explanation,
-                    banca: q.banca || "ESAF",
-                    pegadinha_esaf: q.pegadinha || ""
-                }));
+            const feedRes = await apiFetch('/api/quizzes');
+            const feedJson = await feedRes.json();
+            if (feedJson.success && feedJson.quizzes.length > 0) {
+                quizId = feedJson.quizzes[0].id;
+            } else {
+                quizContent.innerHTML = '<div class="error-box">Nenhum simulado disponível.</div>';
+                return;
             }
-        } catch(e) { 
-            console.warn("Using local fallback data", e); 
+        } catch(e) {
+            quizContent.innerHTML = '<div class="error-box">Erro ao conectar ao banco de dados D1.</div>';
+            return;
         }
     }
 
-    const totalQuestions = hubData.quiz.length;
+    try {
+        const res = await apiFetch(`/api/quiz/start`, {
+            method: 'POST',
+            body: JSON.stringify({ quizId })
+        });
+        const json = await res.json();
+        
+        if (json.error === 'PAYWALL') {
+             showPaywall(container);
+             return;
+        }
+
+        if (json.success) {
+            quizSessionId = json.sessionId;
+            currentQIdx = json.currentQuestionIndex;
+            totalQs = json.totalQuestions;
+            currentScore = json.score;
+            currentQ = json.currentQuestion;
+
+            if (json.completed || !currentQ) {
+                return fetchFinishAndRender(quizContent);
+            }
+        } else {
+            quizContent.innerHTML = '<div class="error-box">Erro ao carregar sessão desse simulado.</div>';
+            return;
+        }
+    } catch(e) {
+        console.error(e);
+        quizContent.innerHTML = '<div class="error-box">Erro HTTP ao iniciar simulado.</div>';
+        return;
+    }
 
     quizContent.innerHTML = `
-        <div class="start-screen">
-            <h2>Simulado Completo ATA</h2>
-            <p>${totalQuestions} Questões | Peso 2 (Prova 2) | Estilo ESAF<br>
-            <strong>Sugestão: 3.5 minutos por questão</strong></p>
+        <div class="start-screen" style="animation: fade-in 0.3s ease-out;">
+            <h2>Preparação do Simulado</h2>
+            <p>${totalQs} Questões<br>
+            <strong>Sugestão: 3 minutos por questão</strong></p>
             <button id="start-btn" class="btn-accent">INICIAR SIMULADO</button>
         </div>
     `;
@@ -49,15 +82,11 @@ export async function renderSimulado(container) {
     });
 }
 
-async function startQuiz(container) {
-    currentQuestionIndex = 0;
-    userAnswers = [];
+function startQuiz(container) {
     startTime = Date.now();
-
     if (window.setQuizMode) window.setQuizMode(true);
-
     timerInterval = setInterval(() => { updateTimer(); }, 1000);
-    renderQuestion(container);
+    renderQuestionUI(container);
 }
 
 function updateTimer() {
@@ -79,27 +108,25 @@ function renderMarkdown(text) {
         .replace(/\n/g, '<br>');
 }
 
-function renderQuestion(container) {
-    const q = hubData.quiz[currentQuestionIndex];
-    if (!q) { finishQuiz(container); return; }
+function renderQuestionUI(container) {
+    if (!currentQ) { fetchFinishAndRender(container); return; }
 
-    const total = hubData.quiz.length;
-    const progress = ((currentQuestionIndex + 1) / total) * 100;
+    const progress = ((currentQIdx) / (totalQs || 1)) * 100;
 
     container.innerHTML = `
         <div class="simu-header">
             <div class="simu-info">
-                <span class="q-count">Questao <strong>${currentQuestionIndex + 1}</strong> de ${total}</span>
+                <span class="q-count">Questão <strong>${currentQIdx + 1}</strong> de ${totalQs}</span>
                 <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
             </div>
             <div class="timer-container" id="quiz-timer">00:00:00</div>
         </div>
 
-        <div class="question-card">
-            <div class="question-text">${renderMarkdown(q.enunciado)}</div>
+        <div class="question-card slide-in-right">
+            <div class="question-text">${renderMarkdown(currentQ.question)}</div>
 
             <div class="options-list">
-                ${q.alternativas.map(opt => `
+                ${currentQ.options.map(opt => `
                     <button class="option-btn" data-letter="${opt.letra}">
                         <span class="opt-letter">${opt.letra}</span>
                         <span class="opt-text">${opt.texto}</span>
@@ -112,13 +139,10 @@ function renderQuestion(container) {
                 <p id="explanation-text"></p>
             </div>
 
-            <div class="quiz-controls">
-                <button id="prev-btn" class="btn-secondary" ${currentQuestionIndex === 0 ? 'disabled' : ''}>
-                    <i data-lucide="arrow-left"></i> Voltar
-                </button>
+            <div class="quiz-controls" style="justify-content: flex-end;">
                 <div class="quiz-controls-right">
                     <button id="check-btn" class="btn-primary" disabled>Ver Resposta</button>
-                    <button id="next-btn" class="btn-accent" disabled>Proxima <i data-lucide="arrow-right"></i></button>
+                    <button id="next-btn" class="btn-accent hidden">Próxima <i data-lucide="arrow-right"></i></button>
                 </div>
             </div>
         </div>
@@ -126,170 +150,191 @@ function renderQuestion(container) {
 
     const optionBtns = container.querySelectorAll('.option-btn');
     const checkBtn = document.getElementById('check-btn');
-    const prevBtn  = document.getElementById('prev-btn');
     const nextBtn  = document.getElementById('next-btn');
     const explanationBox = document.getElementById('explanation-box');
 
     let selectedLetter = null;
 
-    const existingAnswer = userAnswers.find(a => a.id === q.id);
-    const correctOption = q.alternativas.find(o => o.correta);
-    const correctLetter = correctOption ? correctOption.letra : '';
-
-    if (existingAnswer) {
-        selectedLetter = existingAnswer.selected;
-        optionBtns.forEach(btn => {
-            if (btn.dataset.letter === correctLetter) btn.classList.add('correct');
-            if (btn.dataset.letter === selectedLetter) {
-                btn.classList.add('selected');
-                if (selectedLetter !== correctLetter) btn.classList.add('wrong');
-            }
-            btn.disabled = true;
-        });
-        document.getElementById('correct-letter').textContent = correctLetter;
-        document.getElementById('explanation-text').innerHTML = renderMarkdown(q.explicacao) + (q.pegadinha_esaf ? `<br><br><strong>⚠️ Pegadinha ESAF:</strong> ${q.pegadinha_esaf}` : '');
-        explanationBox.classList.remove('hidden');
-        checkBtn.disabled = true;
-        nextBtn.disabled = false;
-    }
-
     optionBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            if (existingAnswer) return;
+            if (checkBtn.classList.contains('hidden')) return; // Already checked
             optionBtns.forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
             selectedLetter = btn.dataset.letter;
             checkBtn.disabled = false;
-            nextBtn.disabled = false;
         });
     });
 
-    checkBtn.addEventListener('click', () => {
-        document.getElementById('correct-letter').textContent = correctLetter;
-        document.getElementById('explanation-text').innerHTML = renderMarkdown(q.explicacao) + (q.pegadinha_esaf ? `<br><br><strong>⚠️ Pegadinha ESAF:</strong> ${q.pegadinha_esaf}` : '');
-        explanationBox.classList.remove('hidden');
-        optionBtns.forEach(btn => {
-            if (btn.dataset.letter === correctLetter) btn.classList.add('correct');
-            else if (btn.dataset.letter === selectedLetter) btn.classList.add('wrong');
-            btn.disabled = true;
-        });
+    checkBtn.addEventListener('click', async () => {
+        const payload = {
+            sessionId: quizSessionId,
+            questionId: currentQ.id,
+            selectedLetter
+        };
+
+        checkBtn.innerText = "Processando...";
         checkBtn.disabled = true;
-        nextBtn.disabled = false;
-        const idx = userAnswers.findIndex(a => a.id === q.id);
-        if (idx === -1) userAnswers.push({ id: q.id, selected: selectedLetter, correct: correctLetter });
-    });
 
-    prevBtn.addEventListener('click', () => {
-        if (currentQuestionIndex > 0) { currentQuestionIndex--; renderQuestion(container); }
+        try {
+            const res = await apiFetch('/api/quiz/answer', {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            const json = await res.json();
+
+            if (json.error === 'PAYWALL') {
+                showPaywall(container);
+                return;
+            }
+
+            if (!json.success) throw new Error(json.error);
+
+            // Highlight Correct / Wrong
+            optionBtns.forEach(btn => {
+                if (btn.dataset.letter === json.correctLetter) btn.classList.add('correct');
+                else if (btn.dataset.letter === selectedLetter) btn.classList.add('wrong');
+                btn.disabled = true;
+            });
+
+            document.getElementById('correct-letter').textContent = json.correctLetter;
+            document.getElementById('explanation-text').innerHTML = renderMarkdown(json.explanation) + (json.pegadinha ? `<br><br><strong>⚠️ Pegadinha:</strong> ${json.pegadinha}` : '');
+            explanationBox.classList.remove('hidden');
+
+            checkBtn.classList.add('hidden');
+            nextBtn.classList.remove('hidden');
+
+            // Store state for next render
+            currentQIdx = json.currentQuestionIndex;
+            currentScore = json.score;
+            currentQ = json.nextQuestion;
+
+        } catch(e) {
+            window.showAlert('Erro', 'Houve um problema ao processar sua resposta.', 'error');
+            checkBtn.innerText = "Ver Resposta";
+            checkBtn.disabled = false;
+        }
     });
 
     nextBtn.addEventListener('click', () => {
-        const idx = userAnswers.findIndex(a => a.id === q.id);
-        if (idx === -1 && selectedLetter) {
-            userAnswers.push({ id: q.id, selected: selectedLetter, correct: correctLetter });
-        }
-        currentQuestionIndex++;
-        renderQuestion(container);
+        renderQuestionUI(container);
     });
 
     if (window.lucide) lucide.createIcons();
 }
 
-function finishQuiz(container) {
+async function fetchFinishAndRender(container) {
+    const quizContent = container;
+    quizContent.innerHTML = '<div class="loader">Calculando Resultado...</div>';
+    
+    try {
+        const res = await apiFetch('/api/quiz/finish', {
+            method: 'POST',
+            body: JSON.stringify({ sessionId: quizSessionId })
+        });
+        const json = await res.json();
+        if (json.success) {
+            finishQuiz(quizContent, json);
+        }
+    } catch(e) {}
+}
+
+function finishQuiz(container, data) {
     clearInterval(timerInterval);
     if (window.setQuizMode) window.setQuizMode(false);
 
     const elapsed = Math.floor((Date.now() - startTime) / 1000);
     const h = Math.floor(elapsed / 3600);
     const m = Math.floor((elapsed % 3600) / 60);
-    const correctCount = userAnswers.filter(a => a.selected === a.correct).length;
-    const percentage = Math.round((correctCount / hubData.quiz.length) * 100);
 
+    const percentage = data.percentage || 0;
     let classification = '';
     if (percentage > 80)       classification = 'Aprovado';
     else if (percentage >= 70) classification = 'Competitivo';
     else                       classification = 'Reprovado';
 
-    const themeStatsMap = {};
-    hubData.quiz.forEach(q => {
-        if (!themeStatsMap[q.disciplina]) themeStatsMap[q.disciplina] = { name: q.disciplina, total: 0, correct: 0 };
-        themeStatsMap[q.disciplina].total++;
-    });
-
-    userAnswers.forEach(a => {
-        if (a.selected === a.correct) {
-            const q = hubData.quiz.find(x => x.id === a.id);
-            if (q && themeStatsMap[q.disciplina]) {
-                themeStatsMap[q.disciplina].correct++;
-            }
-        }
-    });
-
-    const themeStats = Object.values(themeStatsMap).map(t => ({
-        ...t,
-        percent: Math.round((t.correct / t.total) * 100) || 0
-    }));
-
     container.innerHTML = `
-        <div class="result-screen">
+        <div class="result-screen" style="animation: fade-in 0.4s ease-out;">
             <h2>Resultado Final</h2>
             <div class="result-stats">
                 <div class="stat">
                     <p>Acertos</p>
-                    <p>${correctCount}/${hubData.quiz.length}</p>
+                    <p>${data.score}/${data.total}</p>
                 </div>
                 <div class="stat">
                     <p>Percentual</p>
                     <p>${percentage}%</p>
                 </div>
                 <div class="stat">
-                    <p>Tempo</p>
+                    <p>Tempo na Sessão</p>
                     <p>${h}h ${m}m</p>
                 </div>
             </div>
             <div class="result-classification">${classification}</div>
-
-            <div class="theme-report">
-                <h3>Desempenho por Disciplina</h3>
-                <div class="theme-grid">
-                    ${themeStats.map(t => `
-                        <div class="theme-card ${t.percent >= 70 ? 'good' : 'bad'}">
-                            <div class="theme-header">
-                                <span class="theme-name">${t.name}</span>
-                                <span class="theme-score">${t.correct}/${t.total} (${t.percent}%)</span>
-                            </div>
-                            <div class="theme-bar-container">
-                                <div class="theme-bar" style="width: ${t.percent}%"></div>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-                
-                <div class="theme-feedback">
-                    <div class="feedback-box positive">
-                        <h4><i data-lucide="check-circle"></i> Mandou Bem (&ge; 70%)</h4>
-                        <ul>
-                            ${themeStats.filter(t => t.percent >= 70).length > 0 ? themeStats.filter(t => t.percent >= 70).map(t => `<li>${t.name} (<strong>${t.percent}%</strong>)</li>`).join('') : '<li>Nenhuma disciplina atingiu a meta.</li>'}
-                        </ul>
-                    </div>
-                    <div class="feedback-box negative">
-                        <h4><i data-lucide="alert-triangle"></i> Pontos de Atenção (&lt; 70%)</h4>
-                        <ul>
-                            ${themeStats.filter(t => t.percent < 70).length > 0 ? themeStats.filter(t => t.percent < 70).map(t => `<li>${t.name} (<strong>${t.percent}%</strong>)</li>`).join('') : '<li>Excelente! Todas as disciplinas na meta.</li>'}
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <button id="restart-btn" class="btn-accent">
-                <i data-lucide="rotate-ccw"></i> Refazer Simulado
-            </button>
+            <button id="restart-btn" class="btn-primary" style="margin-top:1.5rem;">Voltar Início</button>
         </div>
     `;
 
     document.getElementById('restart-btn').addEventListener('click', () => {
-        renderSimulado(container.parentElement);
+        window.location.reload();
     });
+
+    if (window.lucide) lucide.createIcons();
+}
+
+function showPaywall(container) {
+    clearInterval(timerInterval);
+    if (window.setQuizMode) window.setQuizMode(false);
+
+    container.innerHTML = `
+        <div style="max-width:500px; margin: 4rem auto; padding:2.5rem; background:var(--bg-card); border:1px solid var(--border); border-radius:12px; border-top:4px solid #ef4444; box-shadow: 0 20px 40px rgba(0,0,0,0.6); text-align:center; animation: fade-in 0.3s ease-out;">
+            <div style="width:70px; height:70px; background:rgba(239, 68, 68, 0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem;">
+                <i data-lucide="lock" style="color:#ef4444; width:36px; height:36px;"></i>
+            </div>
+            <h2 style="font-size:1.75rem; color:var(--gray-100); margin-bottom:1rem;">Cota Diária Atingida</h2>
+            <p style="color:var(--gray-300); font-size:1rem; line-height:1.6; margin-bottom:2rem;">Você utilizou suas 10 respostas gratuitas de hoje. Para continuar explodindo sua pontuação agora mesmo, libere o <strong>Acesso Premium</strong> do Simulai.</p>
+            
+            <button id="pw-monthly" data-price="price_1QwXXX_MONTHLY" class="btn-primary" style="width:100%; justify-content:center; padding:1rem; font-size:1.05rem; font-weight:700; background:var(--gray-800); margin-bottom:1rem;">
+                Assinar Mensal por R$ 37
+            </button>
+            <button id="pw-annual" data-price="price_1QwXXX_ANNUAL" class="btn-primary" style="width:100%; justify-content:center; padding:1rem; font-size:1.05rem; font-weight:700; background:#ef4444; border:none; margin-bottom:1rem;">
+                <i data-lucide="zap"></i> Assinar Anual por R$ 370
+            </button>
+            
+            <a href="#" id="pw-close" style="color:var(--gray-500); font-size:0.9rem; text-decoration:underline;">Voltar para Meus Simulados</a>
+        </div>
+    `;
+
+    document.getElementById('pw-close').addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.reload();
+    });
+
+    const bindStripe = (id) => {
+        document.getElementById(id).addEventListener('click', async (e) => {
+            const btn = e.currentTarget;
+            btn.innerHTML = "Redirecionando...";
+            btn.disabled = true;
+            try {
+                const res = await apiFetch(`/payment/create-checkout-session`, {
+                    method: "POST",
+                    body: JSON.stringify({ 
+                        priceId: btn.dataset.price,
+                        origin: window.location.origin 
+                    })
+                });
+                const session = await res.json();
+                if (session.url) window.location.href = session.url;
+                else window.showAlert("Erro", "Erro ao criar sessão de pagamento.", "error");
+            } catch(err) {
+                window.showAlert("Falha", err.message, "error");
+                btn.innerHTML = "Tentar Novamente";
+                btn.disabled = false;
+            }
+        });
+    };
+
+    bindStripe('pw-monthly');
+    bindStripe('pw-annual');
 
     if (window.lucide) lucide.createIcons();
 }
